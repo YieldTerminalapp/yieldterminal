@@ -16,6 +16,4 @@ pub enum YieldError {
     VaultPaused,
     #[msg("Invalid amount for operation")]
     InvalidAmount,
-    #[msg("Vault still has deposits or shares outstanding")]
-    VaultNotEmpty,
 }

@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use crate::state::*;
 use crate::errors::YieldError;
+use crate::events::VaultCreated;
 
 #[derive(Accounts)]
 pub struct CreateVault<'info> {
@@ -55,6 +56,14 @@ pub fn handler(ctx: Context<CreateVault>, name: String, strategy_type: StrategyT
         .ok_or(YieldError::MathOverflow)?;
 
     msg!("vault #{} created", vault.vault_id);
+
+    emit!(VaultCreated {
+        vault: vault.key(),
+        creator: vault.creator,
+        vault_id: vault.vault_id,
+        blocks: vault.strategy_blocks.len() as u8,
+        ts: clock.unix_timestamp,
+    });
 
     Ok(())
 }

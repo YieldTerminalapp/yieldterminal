@@ -78,7 +78,7 @@ pub fn handler(ctx: Context<Deposit>, amount: u64) -> Result<()> {
     // transfer SOL from user to vault
     system_program::transfer(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             system_program::Transfer {
                 from: ctx.accounts.user.to_account_info(),
                 to: ctx.accounts.vault.to_account_info(),

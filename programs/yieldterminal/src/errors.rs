@@ -14,4 +14,6 @@ pub enum YieldError {
     MathOverflow,
     #[msg("Vault deposits are paused")]
     VaultPaused,
+    #[msg("Invalid amount for operation")]
+    InvalidAmount,
 }

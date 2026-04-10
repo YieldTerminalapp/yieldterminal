@@ -85,7 +85,11 @@ def fetch_active_vaults() -> list[dict]:
 
 
 def parse_vault_account(data: bytes) -> dict | None:
-    """Parse YieldVault account data (simplified — key fields only)."""
+    """Parse YieldVault account data matching on-chain struct layout:
+    8(disc) + 32(creator) + 8(vault_id) + 4+N(name) + 1(strategy_type) +
+    1(risk_level) + 8(total_deposits) + 8(total_shares) + 2(performance_bps i16) +
+    1(is_public) + 8(max_capacity) + 4+N*3(strategy_blocks) + 8(created_at) + 1(bump)
+    """
     if len(data) < 50:
         return None
 
@@ -115,18 +119,11 @@ def parse_vault_account(data: bytes) -> dict | None:
         strategyType = data[offset]
         offset += 1
 
-        # skip blocks vec for now (4 bytes count + blocks)
-        blocksCount = struct.unpack_from('<I', data, offset)[0]
-        offset += 4
-        # each block: type(1) + protocol(4+len) + weight(2) = variable
-        # skip by reading past
-        for _ in range(min(blocksCount, 10)):
-            offset += 1  # block type
-            protoLen = struct.unpack_from('<I', data, offset)[0]
-            offset += 4 + min(protoLen, 32)
-            offset += 2  # weight
+        # risk_level: u8
+        riskLevel = data[offset]
+        offset += 1
 
-        # total_deposited: u64
+        # total_deposits: u64
         totalDeposited = struct.unpack_from('<Q', data, offset)[0]
         offset += 8
 
@@ -134,32 +131,44 @@ def parse_vault_account(data: bytes) -> dict | None:
         totalShares = struct.unpack_from('<Q', data, offset)[0]
         offset += 8
 
-        # cumulative_yield_bps: i32
-        cumulativeYieldBps = struct.unpack_from('<i', data, offset)[0]
-        offset += 4
+        # performance_bps: i16
+        performanceBps = struct.unpack_from('<h', data, offset)[0]
+        offset += 2
 
-        # last_executed: i64
-        lastExecuted = struct.unpack_from('<q', data, offset)[0]
-        offset += 8
-
-        # risk_level: u8
-        riskLevel = data[offset]
+        # is_public: bool (u8)
+        isPublic = bool(data[offset])
         offset += 1
 
-        # is_active: bool
-        isActive = bool(data[offset])
+        # max_capacity: u64
+        maxCapacity = struct.unpack_from('<Q', data, offset)[0]
+        offset += 8
+
+        # strategy_blocks: Vec<StrategyBlock> — each block is 3 bytes (action u8 + protocol u8 + alloc u8)
+        blocksCount = struct.unpack_from('<I', data, offset)[0]
+        offset += 4
+        for _ in range(min(blocksCount, 10)):
+            offset += 3  # action(1) + protocol(1) + allocation_pct(1)
+
+        # created_at: i64
+        createdAt = struct.unpack_from('<q', data, offset)[0]
+        offset += 8
+
+        # bump: u8
+        bump = data[offset]
 
         return {
             'creator': creator,
             'vaultId': vaultId,
             'name': name,
             'strategyType': strategyType,
+            'riskLevel': riskLevel,
             'totalDeposited': totalDeposited,
             'totalShares': totalShares,
-            'cumulativeYieldBps': cumulativeYieldBps,
-            'lastExecuted': lastExecuted,
-            'riskLevel': riskLevel,
-            'isActive': isActive,
+            'performanceBps': performanceBps,
+            'isPublic': isPublic,
+            'maxCapacity': maxCapacity,
+            'createdAt': createdAt,
+            'isActive': totalDeposited > 0 or totalShares > 0,
         }
 
     except (struct.error, IndexError):

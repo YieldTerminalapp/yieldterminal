@@ -11,8 +11,8 @@ KEYPAIR_PATH = os.getenv('CRANK_KEYPAIR_PATH', './crank-keypair.json')
 EXECUTE_INTERVAL_MINUTES = int(os.getenv('EXECUTE_INTERVAL_MINUTES', '60'))
 
 CONFIG_SEED = b'yield_config'
-VAULT_SEED = b'yield_vault'
-DEPOSIT_SEED = b'vault_deposit'
+VAULT_SEED = b'vault'
+DEPOSIT_SEED = b'deposit'
 
 # Strategy types match on-chain enum
 STRATEGY_COVERED_CALL = 0

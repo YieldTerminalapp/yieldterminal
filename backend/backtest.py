@@ -14,6 +14,17 @@ PROTOCOL_RISK = {
     "jupiter":  {"vol": 0.020, "loss_pct": 0.08, "max_loss": 0.025},
 }
 
+# Strategy-type overlays — applied on top of protocol mix:
+#   extra_yield_daily: adds flat daily yield (e.g. option premium)
+#   vol_scale: multiplies daily volatility (hedging cuts vol, farming amplifies it)
+#   loss_chance_scale: scales the chance of a loss day
+STRATEGY_OVERLAY = {
+    "coveredCall":  {"extra_yield_daily": 0.0004, "vol_scale": 0.9,  "loss_chance_scale": 1.0},
+    "deltaNeutral": {"extra_yield_daily": 0.0,    "vol_scale": 0.55, "loss_chance_scale": 0.6},
+    "yieldFarm":    {"extra_yield_daily": 0.0002, "vol_scale": 1.15, "loss_chance_scale": 1.2},
+}
+DEFAULT_OVERLAY = {"extra_yield_daily": 0.0, "vol_scale": 1.0, "loss_chance_scale": 1.0}
+
 
 @dataclass
 class BacktestResult:
@@ -27,7 +38,8 @@ class BacktestResult:
     protocols_used: list[str]
 
 
-def simulate_one(blocks: list[dict], days: int, apys: dict[str, float], seed: int | None = None) -> list[float]:
+def simulate_one(blocks: list[dict], days: int, apys: dict[str, float],
+                 overlay: dict, seed: int | None = None) -> list[float]:
     if seed is not None:
         random.seed(seed)
 
@@ -39,18 +51,22 @@ def simulate_one(blocks: list[dict], days: int, apys: dict[str, float], seed: in
             pct = b.get("allocation_pct", 0) / 100.0
             base_daily = apys.get(p, 6.0) / 365 / 100
             risk = PROTOCOL_RISK.get(p, {"vol": 0.015, "loss_pct": 0.05, "max_loss": 0.02})
-            if random.random() < risk["loss_pct"]:
+            loss_p = risk["loss_pct"] * overlay["loss_chance_scale"]
+            if random.random() < loss_p:
                 r = -random.uniform(0, risk["max_loss"])
             else:
-                r = base_daily + random.gauss(0, risk["vol"])
+                r = base_daily + random.gauss(0, risk["vol"] * overlay["vol_scale"])
             day_r += pct * r
+        day_r += overlay["extra_yield_daily"]  # strategy-type yield on top of composition
         returns.append(day_r)
     return returns
 
 
-def run(blocks: list[dict], days: int = 30, runs: int = 50) -> BacktestResult:
+def run(blocks: list[dict], days: int = 30, runs: int = 50,
+        strategy_type: str | None = None) -> BacktestResult:
     apys = {p: s.apy for p, s in all_protocols().items()}  # fetch once, reuse across all runs
-    all_returns = [simulate_one(blocks, days, apys, seed=i) for i in range(runs)]
+    overlay = STRATEGY_OVERLAY.get(strategy_type or "", DEFAULT_OVERLAY)
+    all_returns = [simulate_one(blocks, days, apys, overlay, seed=i) for i in range(runs)]
     avg_daily = [sum(r[d] for r in all_returns) / runs for d in range(days)]
 
     equity = [1.0]

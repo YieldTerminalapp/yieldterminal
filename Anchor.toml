@@ -10,7 +10,7 @@ yieldterminal = "313NKsMsgiA8uLp6y2dnfP1QzCQmZu9xkaaHSkMW6VL5"
 
 [provider]
 cluster = "devnet"
-wallet = "~/.config/solana/id.json"
+wallet = "./deploy-keypair.json"
 
 [scripts]
 test = "cargo test"

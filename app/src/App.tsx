@@ -1,4 +1,5 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import BuilderPage from './pages/BuilderPage';
 import VaultsPage from './pages/VaultsPage';
 import BacktestPage from './pages/BacktestPage';
@@ -32,9 +33,15 @@ export default function App() {
             ))}
           </nav>
           <div className="ml-auto">
-            <button className="bg-navy-700 border border-navy-600 text-xs text-gray-300 px-4 py-1.5 rounded hover:border-gray-500">
-              Connect Wallet
-            </button>
+            <WalletMultiButton style={{
+              backgroundColor: '#1e293b',
+              border: '1px solid #334155',
+              borderRadius: '6px',
+              fontSize: '12px',
+              height: '32px',
+              padding: '0 14px',
+              fontFamily: 'DM Sans, sans-serif',
+            }} />
           </div>
         </div>
       </header>

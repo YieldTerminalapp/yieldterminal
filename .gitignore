@@ -12,7 +12,3 @@ __pycache__/
 .venv/
 .DS_Store
 .vercel
-WORKLOG.md
-REVIEWS.md
-REFERENCES.md
-deploy-keypair.json

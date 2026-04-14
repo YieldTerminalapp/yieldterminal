@@ -4,11 +4,25 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+        display: ['Archivo', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['"Martian Mono"', 'ui-monospace', 'Menlo', 'monospace'],
       },
       colors: {
-        navy: { 900: '#0f172a', 800: '#1e293b', 700: '#334155', 600: '#475569' },
-        accent: '#3b82f6',
+        onyx:     '#000000',
+        coal:     '#0C0C0C',
+        graphite: '#151515',
+        steel:    '#242424',
+        silver:   '#F5F5F5',
+        smoke:    '#6B6B6B',
+        acid:     '#D4FF00',
+        blood:    '#FF3B30',
+        hazard:   '#FFB800',
+        cobalt:   '#3B82F6',
+      },
+      letterSpacing: {
+        widest2: '0.22em',
+        widest3: '0.32em',
       },
     },
   },

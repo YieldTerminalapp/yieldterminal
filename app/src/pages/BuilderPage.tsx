@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ReactFlow, {
   addEdge,
   Background,
@@ -96,6 +97,7 @@ function BuilderCanvas() {
 
   const vp = useVaultProgram();
   const { publicKey } = useWallet();
+  const navigate = useNavigate();
 
   useEffect(() => { api.apy().then(setApy).catch(() => {}); }, []);
 
@@ -162,6 +164,19 @@ function BuilderCanvas() {
 
   useEffect(() => { if (modalOpen) runPreview(); }, [strategy, modalOpen]);
 
+  // Close modal with Esc — but not while actively signing.
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && status.kind !== 'signing') {
+        setModalOpen(false);
+        setStatus({ kind: 'idle' });
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [modalOpen, status.kind]);
+
   const deploy = useCallback(async () => {
     if (!vp || !publicKey) return;
     setStatus({ kind: 'signing' });
@@ -188,7 +203,7 @@ function BuilderCanvas() {
         .rpc();
 
       setStatus({ kind: 'ok', sig, vault: vault.toBase58() });
-      setModalOpen(false);
+      // keep modal open — user sees success, picks next action
     } catch (e: any) {
       setStatus({ kind: 'err', msg: e?.message || 'deploy failed' });
     }
@@ -291,20 +306,6 @@ function BuilderCanvas() {
             <div className="absolute bottom-3 right-3 font-mono text-[9px] uppercase tracking-widest2 text-smoke">
               <span className="border border-steel px-1.5 py-0.5">⌫ DEL</span> <span className="ml-1">to remove selected</span>
             </div>
-
-            {status.kind === 'ok' && (
-              <div className="absolute top-4 right-4 bg-onyx border border-acid p-4 max-w-sm">
-                <div className="label !text-acid mb-1">FUND UNDERWRITTEN</div>
-                <div className="num text-xs text-silver break-all mt-1">{status.vault.slice(0, 24)}…</div>
-                <a
-                  href={`https://solscan.io/tx/${status.sig}?cluster=devnet`}
-                  target="_blank" rel="noreferrer"
-                  className="inline-block mt-2 font-mono text-[10px] uppercase tracking-widest2 text-acid border-b border-acid"
-                >
-                  TX ON SOLSCAN →
-                </a>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -313,6 +314,60 @@ function BuilderCanvas() {
       {modalOpen && (
         <div className="fixed inset-0 bg-onyx/80 backdrop-blur flex items-center justify-center z-50 px-4">
           <div className="bg-onyx border border-acid w-[680px] max-h-[90vh] overflow-y-auto">
+            {status.kind === 'ok' ? (
+              // SUCCESS PANEL — user just signed, show next-action buttons
+              <div>
+                <div className="border-b border-steel px-6 py-4 flex items-baseline justify-between">
+                  <div>
+                    <div className="label !text-acid mb-1">✓ FUND PUBLISHED</div>
+                    <h2 className="font-display text-2xl font-black">{name.toUpperCase()}</h2>
+                  </div>
+                  <button onClick={() => { setModalOpen(false); setStatus({ kind: 'idle' }); }} className="font-mono text-xs text-smoke hover:text-silver">
+                    CLOSE ✕
+                  </button>
+                </div>
+                <div className="p-6 space-y-5">
+                  <div className="border border-acid bg-acid/5">
+                    <div className="px-4 py-3 border-b border-acid/40">
+                      <div className="label mb-1 !text-acid">VAULT PDA</div>
+                      <div className="num text-sm text-silver break-all">{status.vault}</div>
+                    </div>
+                    <div className="px-4 py-3">
+                      <div className="label mb-1 !text-acid">TRANSACTION</div>
+                      <div className="num text-sm text-silver break-all">{status.sig}</div>
+                    </div>
+                  </div>
+
+                  <p className="font-mono text-[11px] text-smoke uppercase tracking-widest2 leading-relaxed">
+                    Your composition is now a PDA vault on Solana devnet. The crank will report performance hourly. Depositors can subscribe with one click.
+                  </p>
+                </div>
+                <div className="border-t border-steel px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+                  <a
+                    href={`https://solscan.io/tx/${status.sig}?cluster=devnet`}
+                    target="_blank" rel="noreferrer"
+                    className="border border-steel px-5 py-3 font-mono text-[11px] uppercase tracking-widest2 text-silver hover:border-acid hover:text-acid inline-flex items-center gap-2"
+                  >
+                    <span>SOLSCAN ↗</span>
+                  </a>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => { setStatus({ kind: 'idle' }); setBacktest(null); setRisk(null); runPreview(); }}
+                      className="border border-steel px-5 py-3 font-mono text-[11px] uppercase tracking-widest2 text-smoke hover:text-silver"
+                    >
+                      DRAFT ANOTHER
+                    </button>
+                    <button
+                      onClick={() => { setModalOpen(false); setStatus({ kind: 'idle' }); navigate('/vaults'); }}
+                      className="bg-acid text-onyx px-6 py-3 font-mono text-[11px] uppercase tracking-widest2 font-semibold hover:bg-silver inline-flex items-center gap-2"
+                    >
+                      <span>OPEN IN FUNDS</span><span>→</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+            <>
             <div className="border-b border-steel px-6 py-4 flex items-baseline justify-between">
               <div>
                 <div className="label !text-acid mb-1">PROSPECTUS · DRAFT</div>
@@ -442,6 +497,8 @@ function BuilderCanvas() {
                 </button>
               </div>
             </div>
+            </>
+            )}
           </div>
         </div>
       )}

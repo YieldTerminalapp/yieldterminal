@@ -56,33 +56,40 @@ export default function BacktestPage() {
   const [err, setErr] = useState<string | null>(null);
   const [apy, setApy] = useState<Record<string, ApyRow> | null>(null);
 
-  useEffect(() => { api.apy().then(setApy).catch(() => {}); }, []);
+  useEffect(() => {
+    const ac = new AbortController();
+    api.apy(ac.signal).then(setApy).catch(() => {});
+    return () => ac.abort();
+  }, []);
 
   const preset = PRESETS.find((p) => p.key === key)!;
 
-  const run = useCallback(async () => {
+  // Debounce slider-driven backtest — don't fire on every pixel of slider drag.
+  useEffect(() => {
+    const ac = new AbortController();
     setLoading(true); setErr(null);
-    try {
-      const pcts = splitAllocation(preset.blocks.length);
-      const payload = preset.blocks.map((b, i) => ({
-        action: b.action.replace(/([A-Z])/g, '_$1').toLowerCase(),
-        protocol: b.protocol,
-        allocation_pct: pcts[i],
-      }));
-      const [r, rk] = await Promise.all([
-        api.backtest(payload, days, runs, preset.strategy),
-        api.risk(payload, preset.strategy),
-      ]);
-      setResult(r);
-      setRisk(rk);
-    } catch (e: any) {
-      setErr(e?.message || 'backtest failed');
-    } finally {
-      setLoading(false);
-    }
-  }, [key, days, runs, preset]);
+    const t = setTimeout(async () => {
+      try {
+        const pcts = splitAllocation(preset.blocks.length);
+        const payload = preset.blocks.map((b, i) => ({
+          action: b.action.replace(/([A-Z])/g, '_$1').toLowerCase(),
+          protocol: b.protocol,
+          allocation_pct: pcts[i],
+        }));
+        const [r, rk] = await Promise.all([
+          api.backtest(payload, days, runs, preset.strategy, ac.signal),
+          api.risk(payload, preset.strategy, ac.signal),
+        ]);
+        setResult(r); setRisk(rk);
+      } catch (e: any) {
+        if (e?.name !== 'AbortError') setErr(e?.message || 'backtest failed');
+      } finally {
+        setLoading(false);
+      }
+    }, 280);
 
-  useEffect(() => { run(); }, [run]);
+    return () => { clearTimeout(t); ac.abort(); };
+  }, [key, days, runs, preset]);
 
   const chartPaths = useMemo(() => {
     if (!result) return null;

@@ -29,16 +29,16 @@ from config import (
     EXECUTE_INTERVAL_MINUTES,
     CONFIG_SEED,
     VAULT_SEED,
-    load_keypair_bytes,
+    keypair_secret_from_json,
 )
 from yield_aggregator import get_strategy_yield
 
 logging.basicConfig(
     level=logging.INFO,
-    format='[%(asctime)s] %(levelname)s %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
+    format="%(asctime)s [%(name)s] %(levelname)s %(message)s",
+    datefmt="%H:%M:%S",
 )
-log = logging.getLogger('executor')
+log = logging.getLogger("executor")
 
 PROGRAM_PUBKEY = Pubkey.from_string(PROGRAM_ID)
 rpcClient = Client(RPC_URL)
@@ -55,7 +55,7 @@ STRATEGY_NAMES = {
 
 
 def get_crank_keypair() -> Keypair:
-    return Keypair.from_bytes(load_keypair_bytes(KEYPAIR_PATH))
+    return Keypair.from_bytes(keypair_secret_from_json(KEYPAIR_PATH))
 
 
 def derive_config_pda() -> Pubkey:

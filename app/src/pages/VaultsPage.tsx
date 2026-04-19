@@ -29,10 +29,7 @@ function strategyLabel(v: any): string {
   const k = Object.keys(v || {})[0] || 'unknown';
   return k.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()).trim();
 }
-
-function anchorEnumKey(v: any): string {
-  return Object.keys(v || {})[0] || '';
-}
+function anchorEnumKey(v: any): string { return Object.keys(v || {})[0] || ''; }
 
 function projectApy(perfBps: number, createdAt: number): number {
   const ageDays = Math.max(1, (Date.now() / 1000 - createdAt) / 86400);
@@ -41,28 +38,29 @@ function projectApy(perfBps: number, createdAt: number): number {
 
 function riskColor(label: string): string {
   return {
-    Conservative: 'text-green-400 border-green-500/30',
-    Moderate:     'text-amber-400 border-amber-500/30',
-    Aggressive:   'text-orange-400 border-orange-500/30',
-    Speculative:  'text-red-400 border-red-500/30',
-  }[label] || 'text-gray-400 border-gray-500/30';
+    Conservative: 'text-leaf border-leaf',
+    Moderate:     'text-amber border-amber',
+    Aggressive:   'text-rust border-rust',
+    Speculative:  'text-rust border-rust bg-rust/10',
+  }[label] || 'text-ash border-ash';
 }
 
-function eventIcon(kind: string): string {
-  return ({ deposit: '▲', withdraw: '▼', execute: '⚡', vault_created: '✦', vault_closed: '✕', transfer: '⇄' } as any)[kind] || '·';
+function eventMark(kind: string): string {
+  return ({ deposit: '+', withdraw: '−', execute: '§', vault_created: '✦', vault_closed: '⨯', transfer: '↔' } as any)[kind] || '·';
 }
-
 function eventColor(kind: string): string {
-  return ({ deposit: 'text-green-400', withdraw: 'text-red-400', execute: 'text-accent', vault_created: 'text-violet-400', vault_closed: 'text-gray-500', transfer: 'text-cyan-400' } as any)[kind] || 'text-gray-400';
+  return ({ deposit: 'text-leaf', withdraw: 'text-rust', execute: 'text-cobalt', vault_created: 'text-ink', vault_closed: 'text-ash', transfer: 'text-amber' } as any)[kind] || 'text-ash';
 }
-
 function relativeTs(ts: number): string {
   const diff = Date.now() / 1000 - ts;
-  if (diff < 60) return `${Math.floor(diff)}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 60) return `${Math.floor(diff)}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
 }
+
+const ROMAN = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+const toRoman = (n: number): string => ROMAN[n + 1] || (n + 1).toString();
 
 export default function VaultsPage() {
   const vp = useVaultProgram();
@@ -74,7 +72,6 @@ export default function VaultsPage() {
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawShares, setWithdrawShares] = useState('');
   const [tx, setTx] = useState<TxState>({ kind: 'idle' });
-
   const [riskByVault, setRiskByVault] = useState<Record<string, { score: number; label: string }>>({});
   const [events, setEvents] = useState<VaultEvent[]>([]);
 
@@ -95,10 +92,9 @@ export default function VaultsPage() {
         performanceBps: r.account.performanceBps,
         createdAt: Number(r.account.createdAt),
       }));
-      parsed.sort((a, b) => b.createdAt - a.createdAt);
+      parsed.sort((a, b) => a.vaultId - b.vaultId);
       setVaults(parsed);
 
-      // fetch risk per vault in parallel (best-effort, don't block on failures)
       const riskMap: Record<string, { score: number; label: string }> = {};
       await Promise.all(parsed.map(async (v) => {
         const payload = v.blocksRaw.map((b) => ({
@@ -122,7 +118,6 @@ export default function VaultsPage() {
 
   useEffect(() => { fetchVaults(); }, [fetchVaults]);
 
-  // fetch events when a vault is expanded
   useEffect(() => {
     if (!expanded) { setEvents([]); return; }
     let cancelled = false;
@@ -140,17 +135,9 @@ export default function VaultsPage() {
       if (!isFinite(sol) || sol <= 0) throw new Error('amount must be > 0');
       const lamports = new BN(Math.floor(sol * LAMPORTS_PER_SOL));
       const userDeposit = depositPda(vp.program.programId, vault.pubkey, publicKey);
-
-      const sig = await vp.program.methods
-        .deposit(lamports)
-        .accounts({
-          vault: vault.pubkey,
-          userDeposit,
-          user: publicKey,
-          systemProgram: SYSTEM_PROGRAM,
-        })
+      const sig = await vp.program.methods.deposit(lamports)
+        .accounts({ vault: vault.pubkey, userDeposit, user: publicKey, systemProgram: SYSTEM_PROGRAM })
         .rpc();
-
       setTx({ kind: 'ok', sig, op: 'deposit' });
       setDepositAmount('');
       await fetchVaults();
@@ -166,16 +153,9 @@ export default function VaultsPage() {
       const shares = new BN(withdrawShares || '0');
       if (shares.lten(0)) throw new Error('shares must be > 0');
       const userDeposit = depositPda(vp.program.programId, vault.pubkey, publicKey);
-
-      const sig = await vp.program.methods
-        .withdraw(shares)
-        .accounts({
-          vault: vault.pubkey,
-          userDeposit,
-          user: publicKey,
-        })
+      const sig = await vp.program.methods.withdraw(shares)
+        .accounts({ vault: vault.pubkey, userDeposit, user: publicKey })
         .rpc();
-
       setTx({ kind: 'ok', sig, op: 'withdraw' });
       setWithdrawShares('');
       await fetchVaults();
@@ -185,166 +165,192 @@ export default function VaultsPage() {
   }, [vp, publicKey, withdrawShares, fetchVaults]);
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="flex items-baseline justify-between mb-4">
-        <h1 className="text-xs text-gray-500 font-bold tracking-widest">VAULT EXPLORER</h1>
-        <button
-          onClick={fetchVaults}
-          className="text-[10px] text-gray-500 hover:text-accent tracking-widest"
-        >
-          REFRESH ↻
+    <div className="max-w-[1400px] mx-auto px-6 py-6">
+      {/* header */}
+      <div className="flex items-baseline justify-between border-b border-ink pb-3 mb-6">
+        <div>
+          <div className="label mb-1">§ 02 · Prospectus directory</div>
+          <h1 className="display text-3xl">Published funds</h1>
+        </div>
+        <button onClick={fetchVaults} className="font-mono text-xs uppercase tracking-widest2 text-ash hover:text-rust border-b border-rule hover:border-rust pb-0.5">
+          re-fetch chain ↻
         </button>
       </div>
 
       {tx.kind === 'ok' && (
-        <div className="bg-green-900/30 border border-green-500/40 rounded-lg px-4 py-2 mb-4 text-xs text-green-300 break-all">
-          {tx.op} confirmed — <a className="text-accent hover:underline" href={`https://solscan.io/tx/${tx.sig}?cluster=devnet`} target="_blank" rel="noreferrer">{tx.sig.slice(0, 16)}…</a>
+        <div className="border border-leaf text-leaf font-mono text-xs px-3 py-2 mb-4 break-all">
+          {tx.op} confirmed — <a href={`https://solscan.io/tx/${tx.sig}?cluster=devnet`} target="_blank" rel="noreferrer" className="underline hover:text-rust">{tx.sig.slice(0, 22)}…</a>
         </div>
       )}
       {tx.kind === 'err' && (
-        <div className="bg-red-950/40 border border-red-500/30 rounded-lg px-4 py-2 mb-4 text-xs text-red-400">
-          {tx.msg}
-        </div>
+        <div className="border border-rust text-rust font-mono text-xs px-3 py-2 mb-4">{tx.msg}</div>
       )}
 
-      {loading && <div className="text-xs text-gray-500">loading on-chain vaults…</div>}
+      {loading && <div className="font-mono text-xs text-ash italic">—loading funds from Solana devnet—</div>}
 
       {!loading && vaults && vaults.length === 0 && (
-        <div className="bg-navy-800 border border-navy-700 rounded-xl p-8 text-center">
-          <div className="text-gray-400 text-sm mb-1">No vaults deployed yet</div>
-          <div className="text-xs text-gray-500">Go to the Builder tab to design and deploy your first strategy.</div>
+        <div className="border border-ink p-10 text-center">
+          <div className="display text-2xl mb-2">No funds have been underwritten.</div>
+          <div className="font-mono text-xs text-ash">Open the <a href="/app" className="border-b border-ink hover:text-rust">Build</a> section and publish the first.</div>
         </div>
       )}
 
       {!loading && vaults && vaults.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {vaults.map((v) => {
             const key = v.pubkey.toBase58();
             const apy = projectApy(v.performanceBps, v.createdAt);
             const mine = publicKey && publicKey.toBase58() === v.creator;
             const isOpen = expanded === key;
             const riskInfo = riskByVault[key];
+            const ageDays = (Date.now() / 1000 - v.createdAt) / 86400;
 
             return (
-              <div key={key} className="bg-navy-800 border border-navy-700 rounded-xl overflow-hidden">
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="text-white font-semibold flex items-center gap-2 flex-wrap">
-                        {v.name}
-                        {mine && <span className="text-[9px] text-accent bg-accent/10 border border-accent/30 px-1.5 py-0.5 rounded tracking-wider">YOU</span>}
-                        {riskInfo && (
-                          <span className={`text-[9px] border bg-transparent px-1.5 py-0.5 rounded tracking-wider ${riskColor(riskInfo.label)}`}>
-                            {riskInfo.label.toUpperCase()} · {riskInfo.score}
-                          </span>
-                        )}
-                      </h3>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {v.strategyType} &middot; {v.blocksRaw.length} blocks &middot; id #{v.vaultId}
-                      </p>
+              <article key={key} className="border border-ink bg-paper hover:shadow-[4px_4px_0_#0E0C0A] transition-all">
+                {/* card */}
+                <div className="grid md:grid-cols-12 gap-6 p-5">
+                  {/* fund label */}
+                  <div className="md:col-span-5">
+                    <div className="flex items-baseline gap-3 mb-1 flex-wrap">
+                      <span className="label">Fund · {toRoman(v.vaultId)}</span>
+                      {mine && <span className="font-mono text-[10px] uppercase tracking-widest2 border border-cobalt text-cobalt px-1.5 py-0.5">yours</span>}
+                      {riskInfo && (
+                        <span className={`font-mono text-[10px] uppercase tracking-widest2 border px-1.5 py-0.5 ${riskColor(riskInfo.label)}`}>
+                          {riskInfo.label}
+                        </span>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <div className={`font-bold text-lg ${apy >= 0 ? 'text-accent' : 'text-red-400'}`}>
-                        {apy >= 0 ? '+' : ''}{apy.toFixed(1)}%
-                      </div>
-                      <div className="text-[10px] text-gray-500">APY (annualized)</div>
+                    <h2 className="display text-3xl leading-tight">{v.name}</h2>
+                    <div className="font-mono text-xs text-ash mt-2">
+                      Thesis: <span className="text-ink">{v.strategyType}</span> · {v.blocksRaw.length} primitives · underwritten {ageDays.toFixed(1)}d ago
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-gray-500">
-                      TVL: {v.totalDeposits.toFixed(4)} SOL &middot; shares: {v.totalShares.toLocaleString()} &middot; perf: {v.performanceBps} bps
+                  {/* headline APY */}
+                  <div className="md:col-span-3 md:border-l md:border-ink md:pl-6">
+                    <div className="label mb-1">Performance (annualized)</div>
+                    <div className={`display text-5xl leading-none ${apy >= 0 ? 'text-leaf' : 'text-rust'}`}>
+                      {apy >= 0 ? '+' : ''}{apy.toFixed(1)}<span className="text-xl">%</span>
                     </div>
+                    <div className="font-mono text-[10px] text-ash mt-1">{v.performanceBps} bps total</div>
+                  </div>
+
+                  {/* tvl */}
+                  <div className="md:col-span-3 md:border-l md:border-ink md:pl-6">
+                    <div className="label mb-1">Capital under management</div>
+                    <div className="num display text-3xl leading-none">{v.totalDeposits.toFixed(4)}</div>
+                    <div className="font-mono text-[10px] text-ash mt-1">SOL · {v.totalShares.toLocaleString()} shares</div>
+                  </div>
+
+                  {/* action */}
+                  <div className="md:col-span-1 flex md:justify-end items-center">
                     <button
-                      onClick={() => {
-                        setExpanded(isOpen ? null : key);
-                        setTx({ kind: 'idle' });
-                      }}
-                      className="bg-accent/10 text-accent text-xs font-semibold px-4 py-1.5 rounded hover:bg-accent/20"
+                      onClick={() => { setExpanded(isOpen ? null : key); setTx({ kind: 'idle' }); }}
+                      className="font-mono text-[11px] uppercase tracking-widest2 border border-ink px-3 py-2 hover:bg-ink hover:text-paper"
                     >
-                      {isOpen ? 'Close' : 'Manage'}
+                      {isOpen ? 'close' : 'open'}
                     </button>
                   </div>
                 </div>
 
+                {/* expanded manage */}
                 {isOpen && (
-                  <div className="border-t border-navy-700 bg-navy-900/40 p-5 grid md:grid-cols-2 gap-5">
-                    {/* actions */}
-                    <div>
-                      <div className="text-[10px] text-gray-500 tracking-widest mb-2">DEPOSIT</div>
-                      <div className="flex gap-2 mb-4">
-                        <input
-                          value={depositAmount}
-                          onChange={(e) => setDepositAmount(e.target.value)}
-                          placeholder="SOL"
-                          type="number"
-                          step="0.001"
-                          className="flex-1 bg-navy-900 border border-navy-700 rounded px-3 py-1.5 text-sm outline-none text-white"
-                        />
-                        <button
-                          onClick={() => submitDeposit(v)}
-                          disabled={tx.kind === 'signing' || !publicKey}
-                          className="bg-accent text-white text-xs font-semibold px-4 py-1.5 rounded hover:bg-blue-600 disabled:bg-navy-700"
-                        >
-                          {tx.kind === 'signing' && tx.op === 'deposit' ? '…' : 'Deposit'}
-                        </button>
-                      </div>
+                  <div className="border-t border-ink bg-cream">
+                    <div className="grid md:grid-cols-12 gap-0">
+                      {/* deposit/withdraw */}
+                      <div className="md:col-span-5 p-6 md:border-r md:border-ink">
+                        <div className="label mb-4">Underwriting · subscribe</div>
 
-                      <div className="text-[10px] text-gray-500 tracking-widest mb-2">WITHDRAW</div>
-                      <div className="flex gap-2">
-                        <input
-                          value={withdrawShares}
-                          onChange={(e) => setWithdrawShares(e.target.value)}
-                          placeholder="shares"
-                          type="number"
-                          className="flex-1 bg-navy-900 border border-navy-700 rounded px-3 py-1.5 text-sm outline-none text-white"
-                        />
-                        <button
-                          onClick={() => submitWithdraw(v)}
-                          disabled={tx.kind === 'signing' || !publicKey}
-                          className="bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-semibold px-4 py-1.5 rounded hover:bg-red-500/30 disabled:opacity-40"
-                        >
-                          {tx.kind === 'signing' && tx.op === 'withdraw' ? '…' : 'Withdraw'}
-                        </button>
-                      </div>
-
-                      <div className="mt-4 text-[10px] text-gray-500">
-                        Allocations:
-                        {v.blocksRaw.map((b, i) => (
-                          <div key={i} className="font-mono">
-                            {b.allocationPct}% {anchorEnumKey(b.protocol)}/{anchorEnumKey(b.action)}
+                        <div className="mb-6">
+                          <div className="label text-[9px] mb-1">Deposit · SOL</div>
+                          <div className="flex items-baseline gap-3">
+                            <input
+                              value={depositAmount}
+                              onChange={(e) => setDepositAmount(e.target.value)}
+                              placeholder="0.100"
+                              type="number"
+                              step="0.001"
+                              className="flex-1 display text-3xl !border-b-2"
+                            />
+                            <button
+                              onClick={() => submitDeposit(v)}
+                              disabled={tx.kind === 'signing' || !publicKey}
+                              className="bg-ink text-paper px-5 py-2 font-mono text-[11px] uppercase tracking-widest2 hover:bg-leaf disabled:bg-rule disabled:text-ash"
+                            >
+                              {tx.kind === 'signing' && tx.op === 'deposit' ? 'signing…' : 'subscribe'}
+                            </button>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* activity feed */}
-                    <div>
-                      <div className="text-[10px] text-gray-500 tracking-widest mb-2">RECENT ACTIVITY</div>
-                      {events.length === 0 ? (
-                        <div className="text-xs text-gray-600">No events indexed yet.</div>
-                      ) : (
-                        <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
-                          {events.map((e) => (
-                            <div key={e.id} className="text-xs flex items-baseline gap-2">
-                              <span className={`${eventColor(e.kind)} w-4 text-center`}>{eventIcon(e.kind)}</span>
-                              <span className="text-gray-300 flex-1">
-                                {e.kind === 'deposit' && `${((e.amount || 0) / LAMPORTS_PER_SOL).toFixed(4)} SOL deposited`}
-                                {e.kind === 'withdraw' && `${((e.amount || 0) / LAMPORTS_PER_SOL).toFixed(4)} SOL withdrawn`}
-                                {e.kind === 'execute' && `yield tick ${e.delta_bps! > 0 ? '+' : ''}${e.delta_bps} bps`}
-                                {e.kind === 'vault_created' && 'vault created'}
-                                {e.kind === 'vault_closed' && 'vault closed'}
-                                {e.kind === 'transfer' && `${(e.shares || 0).toLocaleString()} shares transferred`}
-                              </span>
-                              <span className="text-gray-600 shrink-0">{relativeTs(e.ts)}</span>
-                            </div>
-                          ))}
                         </div>
-                      )}
+
+                        <div className="mb-6">
+                          <div className="label text-[9px] mb-1">Redeem · shares</div>
+                          <div className="flex items-baseline gap-3">
+                            <input
+                              value={withdrawShares}
+                              onChange={(e) => setWithdrawShares(e.target.value)}
+                              placeholder="1000000"
+                              type="number"
+                              className="flex-1 display text-3xl !border-b-2"
+                            />
+                            <button
+                              onClick={() => submitWithdraw(v)}
+                              disabled={tx.kind === 'signing' || !publicKey}
+                              className="border border-rust text-rust px-5 py-2 font-mono text-[11px] uppercase tracking-widest2 hover:bg-rust hover:text-paper disabled:opacity-40"
+                            >
+                              {tx.kind === 'signing' && tx.op === 'withdraw' ? 'signing…' : 'redeem'}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-rule pt-4">
+                          <div className="label mb-2">Allocations</div>
+                          <table className="w-full text-sm">
+                            <tbody>
+                              {v.blocksRaw.map((b, i) => (
+                                <tr key={i} className="border-b border-rule last:border-0">
+                                  <td className="num py-1.5 text-ash pr-3 w-12">{b.allocationPct}%</td>
+                                  <td className="py-1.5 font-sans">{anchorEnumKey(b.protocol)}</td>
+                                  <td className="py-1.5 font-mono text-xs text-ash">{anchorEnumKey(b.action)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* activity */}
+                      <div className="md:col-span-7 p-6">
+                        <div className="flex items-baseline justify-between mb-4">
+                          <div className="label">Changelog · last events</div>
+                          <div className="font-mono text-[10px] text-ash">from indexer</div>
+                        </div>
+
+                        {events.length === 0 ? (
+                          <div className="font-mono text-xs text-ash italic">No activity recorded. The indexer refreshes every 45 seconds.</div>
+                        ) : (
+                          <ul className="space-y-1">
+                            {events.map((e) => (
+                              <li key={e.id} className="grid grid-cols-[auto_auto_1fr_auto] items-baseline gap-3 py-1 border-b border-rule last:border-0 text-sm">
+                                <span className={`font-display text-lg ${eventColor(e.kind)} w-4 text-center`}>{eventMark(e.kind)}</span>
+                                <span className="label w-16">{e.kind}</span>
+                                <span className="font-sans text-ink/80">
+                                  {e.kind === 'deposit' && <><span className="num text-leaf">{((e.amount || 0) / LAMPORTS_PER_SOL).toFixed(4)}</span> SOL subscribed</>}
+                                  {e.kind === 'withdraw' && <><span className="num text-rust">{((e.amount || 0) / LAMPORTS_PER_SOL).toFixed(4)}</span> SOL redeemed</>}
+                                  {e.kind === 'execute' && <>yield tick <span className={`num ${(e.delta_bps || 0) >= 0 ? 'text-leaf' : 'text-rust'}`}>{(e.delta_bps || 0) >= 0 ? '+' : ''}{e.delta_bps}</span> bps</>}
+                                  {e.kind === 'vault_created' && <>fund published</>}
+                                  {e.kind === 'vault_closed' && <>fund closed</>}
+                                  {e.kind === 'transfer' && <><span className="num">{(e.shares || 0).toLocaleString()}</span> shares transferred</>}
+                                </span>
+                                <span className="font-mono text-[10px] text-ash tabular-nums">{relativeTs(e.ts)} ago</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
-              </div>
+              </article>
             );
           })}
         </div>

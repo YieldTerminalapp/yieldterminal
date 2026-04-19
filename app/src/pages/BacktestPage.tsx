@@ -14,32 +14,32 @@ interface Preset {
 const PRESETS: Preset[] = [
   {
     key: 'covered_call',
-    code: 'A–I',
-    label: 'Covered-call mSOL',
+    code: 'A·I',
+    label: 'COVERED CALL · mSOL',
     thesis: 'Stake SOL into mSOL, sell weekly covered calls on Drift to harvest option premium. Gives up unlimited upside for yield consistency.',
     blocks: [BLOCKS[0], BLOCKS[2]],
     strategy: 'coveredCall',
   },
   {
     key: 'delta_neutral',
-    code: 'A–II',
-    label: 'Delta-neutral basis',
-    thesis: 'Long mSOL (physical staking), short perp on the same notional, pocket the funding + staking spread.',
+    code: 'A·II',
+    label: 'DELTA-NEUTRAL BASIS',
+    thesis: 'Long mSOL (physical staking), short perp on the same notional, pocket the funding plus staking spread.',
     blocks: [BLOCKS[0], BLOCKS[1], BLOCKS[4]],
     strategy: 'deltaNeutral',
   },
   {
     key: 'yield_farm',
-    code: 'A–III',
-    label: 'Concentrated LP',
+    code: 'A·III',
+    label: 'CONCENTRATED LP',
     thesis: 'Kamino concentrated LP with lending overlay. Amplified fee capture; IL exposure is the price.',
     blocks: [BLOCKS[3], BLOCKS[1]],
     strategy: 'yieldFarm',
   },
   {
     key: 'pure_staking',
-    code: 'A–IV',
-    label: 'Pure staking',
+    code: 'A·IV',
+    label: 'PURE STAKING',
     thesis: 'Baseline: 100% Marinade staking. The reference curve every other strategy should beat on risk-adjusted terms.',
     blocks: [BLOCKS[0]],
     strategy: 'deltaNeutral',
@@ -84,209 +84,207 @@ export default function BacktestPage() {
 
   useEffect(() => { run(); }, [run]);
 
-  // equity curve chart paths
   const chartPaths = useMemo(() => {
     if (!result) return null;
     const pts = result.equity_curve;
     const min = Math.min(...pts, 1) * 0.995;
     const max = Math.max(...pts, 1) * 1.005;
     const range = max - min || 1;
-    const w = 800, h = 340;
+    const w = 1000, h = 380;
     const line = pts.map((v, i) => {
       const x = (i / (pts.length - 1)) * w;
       const y = h - ((v - min) / range) * h;
       return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
-    // baseline at equity=1.0
+    const area = `${line} L${w},${h} L0,${h} Z`;
     const by = h - ((1 - min) / range) * h;
-    return { line, baselineY: by, w, h, min, max };
+    return { line, area, baselineY: by, w, h };
   }, [result]);
 
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-8">
-      {/* paper masthead */}
-      <div className="border-b-[3px] border-double border-ink pb-4 mb-8 flex items-baseline justify-between">
-        <div>
-          <div className="label mb-1">§ 03 · Research</div>
-          <h1 className="display text-5xl font-light leading-none">Backtest <span className="italic">studies</span></h1>
+    <div className="max-w-[1440px] mx-auto px-5 py-5">
+      {/* header */}
+      <div className="flex items-baseline justify-between border-b border-steel pb-3 mb-6">
+        <div className="flex items-baseline gap-5">
+          <span className="label !text-acid">F3 · RESEARCH</span>
+          <h1 className="font-display text-3xl font-black tracking-tight">BACKTEST STUDIES</h1>
         </div>
-        <div className="text-right font-mono text-xs text-ash max-w-sm hidden md:block">
-          Monte-Carlo simulation over protocol-calibrated volatility and loss profiles.<br />
-          Strategy type overlays premium yield, vol damping, or farm amplification.
+        <div className="hidden md:block font-mono text-[10px] text-smoke uppercase tracking-widest2 max-w-md text-right">
+          MONTE-CARLO · PROTOCOL-CALIBRATED VOLATILITY · STRATEGY OVERLAYS
         </div>
       </div>
 
       {/* preset tabs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 border border-ink divide-x divide-ink mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 border border-steel divide-x divide-steel mb-5">
         {PRESETS.map((p) => {
           const active = p.key === key;
           return (
             <button
               key={p.key}
               onClick={() => setKey(p.key)}
-              className={`px-4 py-4 text-left border-b border-ink md:border-b-0 transition-colors ${
-                active ? 'bg-ink text-paper' : 'bg-paper hover:bg-cream'
+              className={`px-4 py-4 text-left border-b border-steel md:border-b-0 transition-colors ${
+                active ? 'bg-acid text-onyx' : 'bg-onyx hover:bg-graphite'
               }`}
             >
-              <div className={`label ${active ? '!text-paper/70' : ''}`}>{p.code}</div>
-              <div className="display text-lg leading-tight mt-0.5">{p.label}</div>
+              <div className={`font-mono text-[9px] tracking-widest2 mb-1 ${active ? 'text-onyx/60' : 'text-smoke'}`}>{p.code}</div>
+              <div className="font-display text-lg font-black tracking-tight leading-tight">{p.label}</div>
             </button>
           );
         })}
       </div>
 
       {/* abstract + composition */}
-      <section className="grid md:grid-cols-12 gap-8 mb-10 border-b border-ink pb-10">
-        <div className="md:col-span-7">
-          <div className="label mb-3">Abstract</div>
-          <p className="font-sans text-[17px] leading-relaxed text-ink/85 italic first-letter:display first-letter:text-6xl first-letter:leading-[0.85] first-letter:float-left first-letter:mr-2 first-letter:mt-1 first-letter:font-normal">
+      <section className="grid md:grid-cols-12 gap-5 mb-5">
+        <div className="md:col-span-7 border border-steel p-5">
+          <div className="label mb-3">ABSTRACT</div>
+          <p className="font-sans text-base text-silver/85 leading-relaxed first-letter:font-display first-letter:text-6xl first-letter:font-black first-letter:leading-[0.85] first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-acid">
             {preset.thesis}
           </p>
         </div>
-        <div className="md:col-span-5">
-          <div className="label mb-3">Composition · fig. A</div>
-          <table className="w-full border border-ink">
-            <thead>
-              <tr className="border-b border-ink">
-                <th className="label text-left px-3 py-1.5 font-normal">#</th>
-                <th className="label text-left px-3 py-1.5 font-normal">Protocol</th>
-                <th className="label text-left px-3 py-1.5 font-normal">Action</th>
-                <th className="label text-right px-3 py-1.5 font-normal">Live APY</th>
-                <th className="label text-right px-3 py-1.5 font-normal">W</th>
-              </tr>
-            </thead>
-            <tbody>
-              {preset.blocks.map((b, i) => {
-                const live = apy?.[b.protocol];
-                const pcts = splitAllocation(preset.blocks.length);
-                return (
-                  <tr key={i} className="border-b border-rule last:border-0">
-                    <td className="num px-3 py-2 text-ash">{(i + 1).toString().padStart(2, '0')}</td>
-                    <td className="px-3 py-2 font-sans">{b.protocol}</td>
-                    <td className="px-3 py-2 font-mono text-xs text-ash">{b.label}</td>
-                    <td className="num px-3 py-2 text-right">
-                      <span className={live?.source === 'live' ? 'text-leaf' : 'text-amber'}>
-                        {live ? `${live.apy.toFixed(2)}%` : '—'}
-                      </span>
-                    </td>
-                    <td className="num px-3 py-2 text-right">{pcts[i]}%</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div className="font-mono text-[10px] text-ash mt-2">
-            <span className="text-leaf">●</span> live · <span className="text-amber">●</span> estimate
+        <div className="md:col-span-5 border border-steel">
+          <div className="border-b border-steel px-4 py-2.5 flex items-baseline justify-between">
+            <span className="label">COMPOSITION · FIG. A</span>
+            <span className="font-mono text-[9px] text-smoke uppercase tracking-widest2">
+              <span className="text-acid">●</span> LIVE · <span className="text-hazard">●</span> EST
+            </span>
           </div>
+          <div className="grid grid-cols-[40px_1fr_1fr_80px_60px] bg-coal/60 border-b border-steel font-mono text-[9px] uppercase tracking-widest2 text-smoke">
+            <div className="px-3 py-2">#</div>
+            <div className="px-3 py-2">PROTOCOL</div>
+            <div className="px-3 py-2">ACTION</div>
+            <div className="px-3 py-2 text-right">APY</div>
+            <div className="px-3 py-2 text-right">W</div>
+          </div>
+          {preset.blocks.map((b, i) => {
+            const live = apy?.[b.protocol];
+            const pcts = splitAllocation(preset.blocks.length);
+            return (
+              <div key={i} className="grid grid-cols-[40px_1fr_1fr_80px_60px] border-b border-steel last:border-0 text-sm">
+                <div className="num px-3 py-2 text-smoke">{(i + 1).toString().padStart(2, '0')}</div>
+                <div className="px-3 py-2 font-sans">{b.protocol}</div>
+                <div className="px-3 py-2 font-mono text-xs text-smoke">{b.label}</div>
+                <div className="num px-3 py-2 text-right">
+                  <span className={live?.source === 'live' ? 'text-acid' : 'text-hazard'}>
+                    {live ? `${live.apy.toFixed(2)}%` : '—'}
+                  </span>
+                </div>
+                <div className="num px-3 py-2 text-right text-acid">{pcts[i]}%</div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
       {/* parameters */}
-      <section className="mb-10">
-        <div className="label mb-4">Parameters</div>
-        <div className="grid md:grid-cols-2 gap-10 border border-ink p-6">
-          <div>
-            <div className="flex items-baseline justify-between mb-2">
-              <label className="label text-[10px]">Observation window · days</label>
-              <span className="num text-2xl display">{days}</span>
+      <section className="mb-5 border border-steel">
+        <div className="border-b border-steel px-4 py-2.5">
+          <span className="label">PARAMETERS</span>
+        </div>
+        <div className="grid md:grid-cols-2 divide-x divide-steel">
+          <div className="p-5">
+            <div className="flex items-baseline justify-between mb-3">
+              <label className="label">OBSERVATION WINDOW · DAYS</label>
+              <span className="num font-display text-2xl font-black">{days}</span>
             </div>
             <input type="range" min="7" max="180" value={days} onChange={(e) => setDays(parseInt(e.target.value))} className="w-full" />
-            <div className="flex justify-between font-mono text-[10px] text-ash mt-1">
+            <div className="flex justify-between font-mono text-[9px] text-smoke mt-1 tracking-widest2">
               <span>7</span><span>90</span><span>180</span>
             </div>
           </div>
-          <div>
-            <div className="flex items-baseline justify-between mb-2">
-              <label className="label text-[10px]">Monte-Carlo trials · n</label>
-              <span className="num text-2xl display">{runs}</span>
+          <div className="p-5">
+            <div className="flex items-baseline justify-between mb-3">
+              <label className="label">MONTE-CARLO TRIALS · n</label>
+              <span className="num font-display text-2xl font-black">{runs}</span>
             </div>
             <input type="range" min="20" max="500" step="20" value={runs} onChange={(e) => setRuns(parseInt(e.target.value))} className="w-full" />
-            <div className="flex justify-between font-mono text-[10px] text-ash mt-1">
+            <div className="flex justify-between font-mono text-[9px] text-smoke mt-1 tracking-widest2">
               <span>20</span><span>250</span><span>500</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* results */}
-      {err && <div className="border border-rust text-rust font-mono text-xs px-4 py-3 mb-6">{err}</div>}
+      {err && <div className="border border-blood text-blood font-mono text-xs px-4 py-3 mb-4 uppercase">{err}</div>}
 
       {result && (
         <>
-          <section className="mb-10">
-            <div className="flex items-baseline justify-between mb-4">
-              <div className="label">§ I · Headline statistics</div>
-              <div className="font-mono text-[10px] text-ash">n={runs} trials, T={days}d</div>
+          <section className="mb-5 border border-steel">
+            <div className="border-b border-steel px-4 py-2.5 flex items-baseline justify-between">
+              <span className="label !text-acid">§ I · HEADLINE STATISTICS</span>
+              <span className="font-mono text-[10px] text-smoke uppercase tracking-widest2">n={runs} · T={days}D</span>
             </div>
-            <div className="border border-ink">
-              <div className="grid grid-cols-2 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-ink">
-                <BigStat label="Total return" value={`${result.total_return_pct >= 0 ? '+' : ''}${result.total_return_pct}%`} tone={result.total_return_pct >= 0 ? 'up' : 'down'} />
-                <BigStat label="Annualized" value={`${result.annualized_apy}%`} tone="accent" />
-                <BigStat label="Sharpe" value={result.sharpe_ratio.toFixed(2)} tone={result.sharpe_ratio >= 1 ? 'up' : result.sharpe_ratio < 0 ? 'down' : 'neutral'} />
-                <BigStat label="Max drawdown" value={`−${result.max_drawdown_pct}%`} tone="down" />
-                <BigStat label="Win rate" value={`${result.win_rate}%`} tone="neutral" />
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-steel">
+              <BigStat label="TOTAL RETURN" value={`${result.total_return_pct >= 0 ? '+' : ''}${result.total_return_pct}%`} tone={result.total_return_pct >= 0 ? 'up' : 'down'} />
+              <BigStat label="ANNUALIZED" value={`${result.annualized_apy}%`} tone="accent" />
+              <BigStat label="SHARPE" value={result.sharpe_ratio.toFixed(2)} tone={result.sharpe_ratio >= 1 ? 'up' : result.sharpe_ratio < 0 ? 'down' : 'neutral'} />
+              <BigStat label="MAX DRAWDOWN" value={`−${result.max_drawdown_pct}%`} tone="down" />
+              <BigStat label="WIN RATE" value={`${result.win_rate}%`} tone="neutral" />
             </div>
           </section>
 
-          <section className="mb-10">
-            <div className="flex items-baseline justify-between mb-4">
-              <div className="label">§ II · Equity curve (fig. 1)</div>
-              <div className={`font-mono text-[10px] ${loading ? 'text-rust animate-pulse' : 'text-ash'}`}>
-                {loading ? 're-running simulation…' : `averaged across ${runs} trials`}
-              </div>
+          <section className="mb-5 border border-steel">
+            <div className="border-b border-steel px-4 py-2.5 flex items-baseline justify-between">
+              <span className="label !text-acid">§ II · EQUITY CURVE · FIG. 1</span>
+              <span className={`font-mono text-[10px] uppercase tracking-widest2 ${loading ? 'text-acid animate-pulse' : 'text-smoke'}`}>
+                {loading ? 'RE-RUNNING SIMULATION…' : `AVERAGED ${runs} TRIALS`}
+              </span>
             </div>
-            <div className="border border-ink p-6 bg-paper">
+            <div className="p-5 bg-coal">
               {chartPaths && (
                 <svg viewBox={`0 0 ${chartPaths.w} ${chartPaths.h + 20}`} className="w-full h-auto">
+                  <defs>
+                    <linearGradient id="equityFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#D4FF00" stopOpacity="0.18" />
+                      <stop offset="100%" stopColor="#D4FF00" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
                   {/* grid */}
                   {[0.25, 0.5, 0.75].map((t) => (
-                    <line key={t} x1={0} y1={chartPaths.h * t} x2={chartPaths.w} y2={chartPaths.h * t} stroke="#D9D3C6" strokeWidth="0.5" strokeDasharray="2 4" />
+                    <line key={t} x1={0} y1={chartPaths.h * t} x2={chartPaths.w} y2={chartPaths.h * t} stroke="#242424" strokeWidth="0.5" strokeDasharray="2 4" />
                   ))}
-                  <line x1={0} y1={chartPaths.baselineY} x2={chartPaths.w} y2={chartPaths.baselineY} stroke="#8A7F6E" strokeWidth="0.5" strokeDasharray="4 2" />
-                  <text x={chartPaths.w - 4} y={chartPaths.baselineY - 4} fontSize="9" fontFamily="Geist Mono" fill="#8A7F6E" textAnchor="end">baseline · 1.0</text>
+                  <line x1={0} y1={chartPaths.baselineY} x2={chartPaths.w} y2={chartPaths.baselineY} stroke="#6B6B6B" strokeWidth="0.5" strokeDasharray="4 2" />
+                  <text x={chartPaths.w - 6} y={chartPaths.baselineY - 6} fontSize="10" fontFamily="Martian Mono" fill="#6B6B6B" textAnchor="end">BASELINE · 1.0</text>
 
-                  <path d={chartPaths.line} fill="none" stroke="#0E0C0A" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+                  <path d={chartPaths.area} fill="url(#equityFill)" />
+                  <path d={chartPaths.line} fill="none" stroke="#D4FF00" strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" />
 
-                  {/* x-axis label */}
-                  <text x={0} y={chartPaths.h + 14} fontSize="9" fontFamily="Geist Mono" fill="#8A7F6E">t = 0</text>
-                  <text x={chartPaths.w} y={chartPaths.h + 14} fontSize="9" fontFamily="Geist Mono" fill="#8A7F6E" textAnchor="end">t = {days}d</text>
+                  <text x={0} y={chartPaths.h + 14} fontSize="9" fontFamily="Martian Mono" fill="#6B6B6B">T = 0</text>
+                  <text x={chartPaths.w} y={chartPaths.h + 14} fontSize="9" fontFamily="Martian Mono" fill="#6B6B6B" textAnchor="end">T = {days}D</text>
                 </svg>
               )}
             </div>
-            <div className="font-mono text-[11px] text-ash mt-2 italic">
-              Fig. 1 — Monte-Carlo averaged equity curve (strategy: {preset.label}).
-              The hairline baseline is unit capital (1.0); deviation above/below shows cumulative P&L.
+            <div className="border-t border-steel px-4 py-2 font-mono text-[10px] text-smoke uppercase tracking-widest2">
+              FIG. 1 — MONTE-CARLO AVERAGED EQUITY CURVE ({preset.label}). DEVIATION ABOVE BASELINE = CUMULATIVE P&L
             </div>
           </section>
 
           {risk && (
-            <section className="mb-10">
-              <div className="flex items-baseline justify-between mb-4">
-                <div className="label">§ III · Risk profile</div>
+            <section className="mb-5 border border-steel">
+              <div className="border-b border-steel px-4 py-2.5">
+                <span className="label !text-acid">§ III · RISK PROFILE</span>
               </div>
-              <div className="grid md:grid-cols-3 gap-0 border border-ink divide-x divide-ink">
+              <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-steel">
                 <div className="p-5">
-                  <div className="label mb-2">Label</div>
-                  <div className="display text-3xl">{risk.label}</div>
-                  <div className="font-mono text-xs text-ash mt-1">composite score {risk.score}/100</div>
+                  <div className="label mb-2">LABEL</div>
+                  <div className={`font-display text-3xl font-black ${riskColor(risk.label).split(' ')[0]}`}>{risk.label.toUpperCase()}</div>
+                  <div className="font-mono text-[10px] text-smoke mt-2 uppercase tracking-widest2">COMPOSITE {risk.score}/100</div>
                 </div>
                 <div className="p-5">
-                  <div className="label mb-2">1-day VaR (95%)</div>
-                  <div className="num display text-3xl text-rust">−{risk.var_1d_pct}%</div>
-                  <div className="font-mono text-xs text-ash mt-1">daily tail-loss at 95% confidence</div>
+                  <div className="label mb-2">1-DAY VaR · 95%</div>
+                  <div className="num font-display text-3xl font-black text-blood">−{risk.var_1d_pct}%</div>
+                  <div className="font-mono text-[10px] text-smoke mt-2 uppercase tracking-widest2">DAILY TAIL-LOSS</div>
                 </div>
                 <div className="p-5">
-                  <div className="label mb-2">Market β (SOL)</div>
-                  <div className="num display text-3xl text-cobalt">{risk.sol_beta}</div>
-                  <div className="font-mono text-xs text-ash mt-1">correlation with SOL spot</div>
+                  <div className="label mb-2">MARKET β · SOL</div>
+                  <div className="num font-display text-3xl font-black text-cobalt">{risk.sol_beta}</div>
+                  <div className="font-mono text-[10px] text-smoke mt-2 uppercase tracking-widest2">CORRELATION W/ SOL SPOT</div>
                 </div>
               </div>
               {risk.notes.length > 0 && (
-                <ol className="mt-4 border-t border-rule pt-3 font-mono text-xs text-ash italic list-none">
+                <ol className="border-t border-steel font-mono text-[11px] text-smoke uppercase tracking-wider list-none">
                   {risk.notes.map((n, i) => (
-                    <li key={i} className="border-b border-rule py-1.5 last:border-0">
-                      <span className="num mr-2 text-ink/60">[{(i + 1).toString().padStart(2, '0')}]</span>{n}
+                    <li key={i} className="border-b border-steel last:border-0 px-4 py-2">
+                      <span className="num text-smoke mr-3">[{(i + 1).toString().padStart(2, '0')}]</span>{n}
                     </li>
                   ))}
                 </ol>
@@ -294,13 +292,12 @@ export default function BacktestPage() {
             </section>
           )}
 
-          {/* footnote */}
-          <section className="border-t border-ink pt-5 font-mono text-[11px] text-ash italic leading-relaxed">
-            <div className="label mb-2 not-italic">Method · data</div>
+          <section className="border-t border-steel pt-4 font-mono text-[10px] text-smoke uppercase tracking-widest2 leading-relaxed">
+            <span className="text-silver">METHOD · DATA —</span>{' '}
             Monte-Carlo simulation with protocol-calibrated daily volatility σ, loss-day probability p, and max-loss cap.
             Marinade APY sourced from api.marinade.finance (30d rolling); Kamino / Drift / Jupiter use last-observed estimates.
-            Strategy-type overlay adds a flat daily option-premium yield (covered call), a 0.55× volatility damper (delta-neutral),
-            or a 1.15× amplification (yield farm). Past backtest performance is not indicative of future returns.
+            Strategy-type overlay adds a flat daily option-premium yield (covered call), a 0.55× vol damper (delta-neutral),
+            or a 1.15× amplification (yield farm). PAST BACKTEST PERFORMANCE IS NOT INDICATIVE OF FUTURE RETURNS.
           </section>
         </>
       )}
@@ -308,12 +305,21 @@ export default function BacktestPage() {
   );
 }
 
+function riskColor(label: string): string {
+  return {
+    Conservative: 'text-acid',
+    Moderate:     'text-hazard',
+    Aggressive:   'text-blood',
+    Speculative:  'text-blood',
+  }[label] || 'text-smoke';
+}
+
 function BigStat({ label, value, tone }: { label: string; value: string; tone: 'up' | 'down' | 'neutral' | 'accent' }) {
-  const color = tone === 'up' ? 'text-leaf' : tone === 'down' ? 'text-rust' : tone === 'accent' ? 'text-cobalt' : 'text-ink';
+  const color = tone === 'up' ? 'text-acid' : tone === 'down' ? 'text-blood' : tone === 'accent' ? 'text-cobalt' : 'text-silver';
   return (
     <div className="px-5 py-6">
-      <div className="label mb-1">{label}</div>
-      <div className={`num display text-3xl font-light ${color} leading-none`}>{value}</div>
+      <div className="label mb-2">{label}</div>
+      <div className={`num font-display text-3xl font-black leading-none ${color}`}>{value}</div>
     </div>
   );
 }

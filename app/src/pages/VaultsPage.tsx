@@ -38,29 +38,26 @@ function projectApy(perfBps: number, createdAt: number): number {
 
 function riskColor(label: string): string {
   return {
-    Conservative: 'text-leaf border-leaf',
-    Moderate:     'text-amber border-amber',
-    Aggressive:   'text-rust border-rust',
-    Speculative:  'text-rust border-rust bg-rust/10',
-  }[label] || 'text-ash border-ash';
+    Conservative: 'text-acid border-acid',
+    Moderate:     'text-hazard border-hazard',
+    Aggressive:   'text-blood border-blood',
+    Speculative:  'text-blood border-blood bg-blood/10',
+  }[label] || 'text-smoke border-smoke';
 }
 
 function eventMark(kind: string): string {
-  return ({ deposit: '+', withdraw: '−', execute: '§', vault_created: '✦', vault_closed: '⨯', transfer: '↔' } as any)[kind] || '·';
+  return ({ deposit: '▲', withdraw: '▼', execute: '⚡', vault_created: '✦', vault_closed: '⨯', transfer: '↔' } as any)[kind] || '·';
 }
 function eventColor(kind: string): string {
-  return ({ deposit: 'text-leaf', withdraw: 'text-rust', execute: 'text-cobalt', vault_created: 'text-ink', vault_closed: 'text-ash', transfer: 'text-amber' } as any)[kind] || 'text-ash';
+  return ({ deposit: 'text-acid', withdraw: 'text-blood', execute: 'text-hazard', vault_created: 'text-cobalt', vault_closed: 'text-smoke', transfer: 'text-silver' } as any)[kind] || 'text-smoke';
 }
 function relativeTs(ts: number): string {
   const diff = Date.now() / 1000 - ts;
-  if (diff < 60) return `${Math.floor(diff)}s`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  return `${Math.floor(diff / 86400)}d`;
+  if (diff < 60) return `${Math.floor(diff)}S`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}M`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}H`;
+  return `${Math.floor(diff / 86400)}D`;
 }
-
-const ROMAN = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
-const toRoman = (n: number): string => ROMAN[n + 1] || (n + 1).toString();
 
 export default function VaultsPage() {
   const vp = useVaultProgram();
@@ -165,38 +162,38 @@ export default function VaultsPage() {
   }, [vp, publicKey, withdrawShares, fetchVaults]);
 
   return (
-    <div className="max-w-[1400px] mx-auto px-6 py-6">
+    <div className="max-w-[1440px] mx-auto px-5 py-5">
       {/* header */}
-      <div className="flex items-baseline justify-between border-b border-ink pb-3 mb-6">
-        <div>
-          <div className="label mb-1">§ 02 · Prospectus directory</div>
-          <h1 className="display text-3xl">Published funds</h1>
+      <div className="flex items-baseline justify-between border-b border-steel pb-3 mb-6">
+        <div className="flex items-baseline gap-5">
+          <span className="label !text-acid">F2 · FUNDS</span>
+          <h1 className="font-display text-3xl font-black tracking-tight">PROSPECTUS DIRECTORY</h1>
         </div>
-        <button onClick={fetchVaults} className="font-mono text-xs uppercase tracking-widest2 text-ash hover:text-rust border-b border-rule hover:border-rust pb-0.5">
-          re-fetch chain ↻
+        <button onClick={fetchVaults} className="font-mono text-[10px] uppercase tracking-widest2 text-smoke hover:text-acid border border-steel hover:border-acid px-3 py-1.5">
+          ↻ RE-FETCH
         </button>
       </div>
 
       {tx.kind === 'ok' && (
-        <div className="border border-leaf text-leaf font-mono text-xs px-3 py-2 mb-4 break-all">
-          {tx.op} confirmed — <a href={`https://solscan.io/tx/${tx.sig}?cluster=devnet`} target="_blank" rel="noreferrer" className="underline hover:text-rust">{tx.sig.slice(0, 22)}…</a>
+        <div className="border border-acid text-acid font-mono text-[11px] px-3 py-2 mb-4 break-all uppercase tracking-widest2">
+          ✓ {tx.op} CONFIRMED — <a href={`https://solscan.io/tx/${tx.sig}?cluster=devnet`} target="_blank" rel="noreferrer" className="underline">{tx.sig.slice(0, 22)}…</a>
         </div>
       )}
       {tx.kind === 'err' && (
-        <div className="border border-rust text-rust font-mono text-xs px-3 py-2 mb-4">{tx.msg}</div>
+        <div className="border border-blood text-blood font-mono text-[11px] px-3 py-2 mb-4 uppercase">✕ {tx.msg}</div>
       )}
 
-      {loading && <div className="font-mono text-xs text-ash italic">—loading funds from Solana devnet—</div>}
+      {loading && <div className="font-mono text-xs text-smoke uppercase tracking-widest2">— LOADING FUNDS FROM SOLANA DEVNET —</div>}
 
       {!loading && vaults && vaults.length === 0 && (
-        <div className="border border-ink p-10 text-center">
-          <div className="display text-2xl mb-2">No funds have been underwritten.</div>
-          <div className="font-mono text-xs text-ash">Open the <a href="/app" className="border-b border-ink hover:text-rust">Build</a> section and publish the first.</div>
+        <div className="border border-steel p-10 text-center">
+          <div className="font-display text-3xl font-black mb-2">NO FUNDS PUBLISHED.</div>
+          <a href="/app" className="font-mono text-xs uppercase tracking-widest2 text-acid border-b border-acid">BE THE FIRST →</a>
         </div>
       )}
 
       {!loading && vaults && vaults.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {vaults.map((v) => {
             const key = v.pubkey.toBase58();
             const apy = projectApy(v.performanceBps, v.createdAt);
@@ -206,63 +203,63 @@ export default function VaultsPage() {
             const ageDays = (Date.now() / 1000 - v.createdAt) / 86400;
 
             return (
-              <article key={key} className="border border-ink bg-paper hover:shadow-[4px_4px_0_#0E0C0A] transition-all">
-                {/* card */}
-                <div className="grid md:grid-cols-12 gap-6 p-5">
-                  {/* fund label */}
-                  <div className="md:col-span-5">
-                    <div className="flex items-baseline gap-3 mb-1 flex-wrap">
-                      <span className="label">Fund · {toRoman(v.vaultId)}</span>
-                      {mine && <span className="font-mono text-[10px] uppercase tracking-widest2 border border-cobalt text-cobalt px-1.5 py-0.5">yours</span>}
+              <article key={key} className="border border-steel bg-coal">
+                <div className="grid md:grid-cols-12 gap-0">
+                  {/* name column */}
+                  <div className="md:col-span-5 p-5 md:border-r border-steel">
+                    <div className="flex items-baseline gap-2 mb-2 flex-wrap">
+                      <span className="label !text-acid">FUND · {v.vaultId.toString().padStart(3, '0')}</span>
+                      {mine && <span className="font-mono text-[9px] uppercase tracking-widest2 bg-cobalt/20 text-cobalt border border-cobalt px-1.5 py-0.5">YOURS</span>}
                       {riskInfo && (
-                        <span className={`font-mono text-[10px] uppercase tracking-widest2 border px-1.5 py-0.5 ${riskColor(riskInfo.label)}`}>
+                        <span className={`font-mono text-[9px] uppercase tracking-widest2 border px-1.5 py-0.5 ${riskColor(riskInfo.label)}`}>
                           {riskInfo.label}
                         </span>
                       )}
                     </div>
-                    <h2 className="display text-3xl leading-tight">{v.name}</h2>
-                    <div className="font-mono text-xs text-ash mt-2">
-                      Thesis: <span className="text-ink">{v.strategyType}</span> · {v.blocksRaw.length} primitives · underwritten {ageDays.toFixed(1)}d ago
+                    <h2 className="font-display text-3xl font-black tracking-tight leading-tight">{v.name.toUpperCase()}</h2>
+                    <div className="font-mono text-[10px] uppercase tracking-widest2 text-smoke mt-2">
+                      THESIS · {v.strategyType} · {v.blocksRaw.length} PRIMITIVES · {ageDays.toFixed(1)}D OLD
                     </div>
                   </div>
 
-                  {/* headline APY */}
-                  <div className="md:col-span-3 md:border-l md:border-ink md:pl-6">
-                    <div className="label mb-1">Performance (annualized)</div>
-                    <div className={`display text-5xl leading-none ${apy >= 0 ? 'text-leaf' : 'text-rust'}`}>
-                      {apy >= 0 ? '+' : ''}{apy.toFixed(1)}<span className="text-xl">%</span>
+                  {/* apy */}
+                  <div className="md:col-span-3 p-5 md:border-r border-steel md:flex md:flex-col md:justify-center">
+                    <div className="label mb-1">PERF · ANNUALIZED</div>
+                    <div className={`font-display text-5xl font-black leading-none ${apy >= 0 ? 'text-acid' : 'text-blood'}`}>
+                      {apy >= 0 ? '+' : ''}{apy.toFixed(1)}<span className="text-2xl">%</span>
                     </div>
-                    <div className="font-mono text-[10px] text-ash mt-1">{v.performanceBps} bps total</div>
+                    <div className="num font-mono text-[10px] text-smoke mt-1">{v.performanceBps} BPS TOTAL</div>
                   </div>
 
                   {/* tvl */}
-                  <div className="md:col-span-3 md:border-l md:border-ink md:pl-6">
-                    <div className="label mb-1">Capital under management</div>
-                    <div className="num display text-3xl leading-none">{v.totalDeposits.toFixed(4)}</div>
-                    <div className="font-mono text-[10px] text-ash mt-1">SOL · {v.totalShares.toLocaleString()} shares</div>
+                  <div className="md:col-span-3 p-5 md:border-r border-steel md:flex md:flex-col md:justify-center">
+                    <div className="label mb-1">CAPITAL</div>
+                    <div className="num font-display text-4xl font-black leading-none">{v.totalDeposits.toFixed(4)}</div>
+                    <div className="num font-mono text-[10px] text-smoke mt-1">SOL · {v.totalShares.toLocaleString()} SHARES</div>
                   </div>
 
                   {/* action */}
-                  <div className="md:col-span-1 flex md:justify-end items-center">
+                  <div className="md:col-span-1 flex md:justify-end items-center p-5">
                     <button
                       onClick={() => { setExpanded(isOpen ? null : key); setTx({ kind: 'idle' }); }}
-                      className="font-mono text-[11px] uppercase tracking-widest2 border border-ink px-3 py-2 hover:bg-ink hover:text-paper"
+                      className={`font-mono text-[10px] uppercase tracking-widest2 border px-3 py-2 transition-colors ${
+                        isOpen ? 'bg-acid text-onyx border-acid' : 'border-steel text-silver hover:border-acid hover:text-acid'
+                      }`}
                     >
-                      {isOpen ? 'close' : 'open'}
+                      {isOpen ? 'CLOSE' : 'OPEN'}
                     </button>
                   </div>
                 </div>
 
-                {/* expanded manage */}
                 {isOpen && (
-                  <div className="border-t border-ink bg-cream">
+                  <div className="border-t border-steel bg-graphite/30">
                     <div className="grid md:grid-cols-12 gap-0">
-                      {/* deposit/withdraw */}
-                      <div className="md:col-span-5 p-6 md:border-r md:border-ink">
-                        <div className="label mb-4">Underwriting · subscribe</div>
+                      {/* actions */}
+                      <div className="md:col-span-5 p-5 md:border-r border-steel">
+                        <div className="label mb-4 !text-acid">SUBSCRIBE</div>
 
-                        <div className="mb-6">
-                          <div className="label text-[9px] mb-1">Deposit · SOL</div>
+                        <div className="mb-5">
+                          <div className="label text-[9px] mb-1">DEPOSIT · SOL</div>
                           <div className="flex items-baseline gap-3">
                             <input
                               value={depositAmount}
@@ -270,78 +267,78 @@ export default function VaultsPage() {
                               placeholder="0.100"
                               type="number"
                               step="0.001"
-                              className="flex-1 display text-3xl !border-b-2"
+                              className="!text-2xl font-display font-black"
                             />
                             <button
                               onClick={() => submitDeposit(v)}
                               disabled={tx.kind === 'signing' || !publicKey}
-                              className="bg-ink text-paper px-5 py-2 font-mono text-[11px] uppercase tracking-widest2 hover:bg-leaf disabled:bg-rule disabled:text-ash"
+                              className="bg-acid text-onyx px-4 py-2 font-mono text-[11px] uppercase tracking-widest2 font-semibold hover:bg-silver disabled:bg-steel disabled:text-smoke"
                             >
-                              {tx.kind === 'signing' && tx.op === 'deposit' ? 'signing…' : 'subscribe'}
+                              {tx.kind === 'signing' && tx.op === 'deposit' ? '…' : 'SUBSCRIBE'}
                             </button>
                           </div>
                         </div>
 
-                        <div className="mb-6">
-                          <div className="label text-[9px] mb-1">Redeem · shares</div>
+                        <div className="mb-5">
+                          <div className="label text-[9px] mb-1">REDEEM · SHARES</div>
                           <div className="flex items-baseline gap-3">
                             <input
                               value={withdrawShares}
                               onChange={(e) => setWithdrawShares(e.target.value)}
                               placeholder="1000000"
                               type="number"
-                              className="flex-1 display text-3xl !border-b-2"
+                              className="!text-2xl font-display font-black"
                             />
                             <button
                               onClick={() => submitWithdraw(v)}
                               disabled={tx.kind === 'signing' || !publicKey}
-                              className="border border-rust text-rust px-5 py-2 font-mono text-[11px] uppercase tracking-widest2 hover:bg-rust hover:text-paper disabled:opacity-40"
+                              className="border border-blood text-blood px-4 py-2 font-mono text-[11px] uppercase tracking-widest2 hover:bg-blood hover:text-onyx disabled:opacity-40"
                             >
-                              {tx.kind === 'signing' && tx.op === 'withdraw' ? 'signing…' : 'redeem'}
+                              {tx.kind === 'signing' && tx.op === 'withdraw' ? '…' : 'REDEEM'}
                             </button>
                           </div>
                         </div>
 
-                        <div className="border-t border-rule pt-4">
-                          <div className="label mb-2">Allocations</div>
-                          <table className="w-full text-sm">
-                            <tbody>
-                              {v.blocksRaw.map((b, i) => (
-                                <tr key={i} className="border-b border-rule last:border-0">
-                                  <td className="num py-1.5 text-ash pr-3 w-12">{b.allocationPct}%</td>
-                                  <td className="py-1.5 font-sans">{anchorEnumKey(b.protocol)}</td>
-                                  <td className="py-1.5 font-mono text-xs text-ash">{anchorEnumKey(b.action)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                        <div className="border-t border-steel pt-4">
+                          <div className="label mb-2">ALLOCATIONS</div>
+                          <div className="border border-steel">
+                            {v.blocksRaw.map((b, i) => (
+                              <div key={i} className="grid grid-cols-[60px_1fr_1fr] border-b border-steel last:border-0 text-sm">
+                                <div className="num px-3 py-1.5 text-acid">{b.allocationPct}%</div>
+                                <div className="px-3 py-1.5 font-sans">{anchorEnumKey(b.protocol)}</div>
+                                <div className="px-3 py-1.5 font-mono text-xs text-smoke">{anchorEnumKey(b.action)}</div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
                       {/* activity */}
-                      <div className="md:col-span-7 p-6">
+                      <div className="md:col-span-7 p-5">
                         <div className="flex items-baseline justify-between mb-4">
-                          <div className="label">Changelog · last events</div>
-                          <div className="font-mono text-[10px] text-ash">from indexer</div>
+                          <div className="label">CHANGELOG · LAST EVENTS</div>
+                          <div className="font-mono text-[10px] text-smoke uppercase tracking-widest2 flex items-center gap-1.5">
+                            <span className="w-1 h-1 rounded-full bg-acid blink" /> FROM INDEXER
+                          </div>
                         </div>
 
                         {events.length === 0 ? (
-                          <div className="font-mono text-xs text-ash italic">No activity recorded. The indexer refreshes every 45 seconds.</div>
+                          <div className="font-mono text-xs text-smoke uppercase tracking-widest2">NO ACTIVITY RECORDED. INDEXER REFRESHES EVERY 45S.</div>
                         ) : (
-                          <ul className="space-y-1">
+                          <ul className="space-y-0">
                             {events.map((e) => (
-                              <li key={e.id} className="grid grid-cols-[auto_auto_1fr_auto] items-baseline gap-3 py-1 border-b border-rule last:border-0 text-sm">
-                                <span className={`font-display text-lg ${eventColor(e.kind)} w-4 text-center`}>{eventMark(e.kind)}</span>
-                                <span className="label w-16">{e.kind}</span>
-                                <span className="font-sans text-ink/80">
-                                  {e.kind === 'deposit' && <><span className="num text-leaf">{((e.amount || 0) / LAMPORTS_PER_SOL).toFixed(4)}</span> SOL subscribed</>}
-                                  {e.kind === 'withdraw' && <><span className="num text-rust">{((e.amount || 0) / LAMPORTS_PER_SOL).toFixed(4)}</span> SOL redeemed</>}
-                                  {e.kind === 'execute' && <>yield tick <span className={`num ${(e.delta_bps || 0) >= 0 ? 'text-leaf' : 'text-rust'}`}>{(e.delta_bps || 0) >= 0 ? '+' : ''}{e.delta_bps}</span> bps</>}
+                              <li key={e.id} className="grid grid-cols-[24px_72px_1fr_auto] items-baseline gap-3 py-1.5 border-b border-steel last:border-0 text-sm">
+                                <span className={`text-center text-base ${eventColor(e.kind)}`}>{eventMark(e.kind)}</span>
+                                <span className="label">{e.kind}</span>
+                                <span className="font-sans text-silver/85 text-[13px]">
+                                  {e.kind === 'deposit' && <><span className="num text-acid">{((e.amount || 0) / LAMPORTS_PER_SOL).toFixed(4)}</span> SOL subscribed</>}
+                                  {e.kind === 'withdraw' && <><span className="num text-blood">{((e.amount || 0) / LAMPORTS_PER_SOL).toFixed(4)}</span> SOL redeemed</>}
+                                  {e.kind === 'execute' && <>yield tick <span className={`num ${(e.delta_bps || 0) >= 0 ? 'text-acid' : 'text-blood'}`}>{(e.delta_bps || 0) >= 0 ? '+' : ''}{e.delta_bps}</span> bps</>}
                                   {e.kind === 'vault_created' && <>fund published</>}
                                   {e.kind === 'vault_closed' && <>fund closed</>}
                                   {e.kind === 'transfer' && <><span className="num">{(e.shares || 0).toLocaleString()}</span> shares transferred</>}
                                 </span>
-                                <span className="font-mono text-[10px] text-ash tabular-nums">{relativeTs(e.ts)} ago</span>
+                                <span className="num font-mono text-[10px] text-smoke">{relativeTs(e.ts)}</span>
                               </li>
                             ))}
                           </ul>

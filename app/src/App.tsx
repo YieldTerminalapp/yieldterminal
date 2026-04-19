@@ -8,34 +8,37 @@ import BacktestPage from './pages/BacktestPage';
 function Masthead() {
   const loc = useLocation();
   const nav = [
-    { to: '/app',      label: 'Build',    num: '§ 01' },
-    { to: '/vaults',   label: 'Funds',    num: '§ 02' },
-    { to: '/backtest', label: 'Research', num: '§ 03' },
+    { to: '/app',      label: 'BUILD',    code: 'F1' },
+    { to: '/vaults',   label: 'FUNDS',    code: 'F2' },
+    { to: '/backtest', label: 'RESEARCH', code: 'F3' },
   ];
   return (
-    <header className="border-b border-ink bg-paper sticky top-0 z-40">
-      <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-baseline justify-between gap-8">
-        <Link to="/" className="flex items-baseline gap-3 shrink-0">
-          <span className="display text-2xl font-light">Yield<span className="italic">terminal</span></span>
-          <span className="label hidden md:inline">— Research Terminal · v0.2 · devnet</span>
+    <header className="border-b border-steel bg-onyx sticky top-0 z-40 backdrop-blur">
+      <div className="max-w-[1440px] mx-auto px-5 h-14 flex items-center justify-between gap-8">
+        <Link to="/" className="flex items-center gap-3 shrink-0">
+          <div className="w-3 h-3 bg-acid pulse-ring" />
+          <span className="font-display text-xl font-black tracking-tight">YIELDTERMINAL</span>
+          <span className="hidden md:inline label !text-[9px] !text-smoke">DEVNET·v0.3</span>
         </Link>
-        <nav className="flex items-baseline gap-7 text-sm">
+
+        <nav className="flex items-stretch h-full">
           {nav.map((n) => {
             const active = loc.pathname === n.to;
             return (
               <Link
                 key={n.to}
                 to={n.to}
-                className={`flex items-baseline gap-1.5 pb-0.5 border-b transition-colors ${
-                  active ? 'border-rust text-ink' : 'border-transparent text-ash hover:text-ink'
+                className={`flex items-center gap-2 px-4 border-x border-steel -mx-px transition-colors ${
+                  active ? 'bg-acid text-onyx' : 'text-silver hover:bg-graphite'
                 }`}
               >
-                <span className="num text-[9px] text-ash">{n.num}</span>
-                <span className="font-mono uppercase tracking-widest2 text-[11px]">{n.label}</span>
+                <span className={`font-mono text-[9px] tracking-widest3 ${active ? 'text-onyx/60' : 'text-smoke'}`}>{n.code}</span>
+                <span className="font-mono text-[11px] tracking-widest2 font-medium">{n.label}</span>
               </Link>
             );
           })}
         </nav>
+
         <WalletMultiButton />
       </div>
     </header>
@@ -44,33 +47,37 @@ function Masthead() {
 
 function Colophon() {
   return (
-    <footer className="border-t border-ink bg-paper mt-16">
-      <div className="max-w-[1400px] mx-auto px-6 py-10 grid md:grid-cols-4 gap-8 text-sm">
-        <div className="md:col-span-2">
-          <div className="display text-xl mb-2">Yieldterminal</div>
-          <p className="text-ash font-mono text-xs leading-relaxed max-w-md">
-            A research terminal for on-chain yield strategies. Compose yield primitives from Marinade, Kamino, Drift, and Jupiter into an auditable, tradable vault on Solana.
+    <footer className="border-t border-steel bg-onyx">
+      <div className="max-w-[1440px] mx-auto px-5 py-12 grid md:grid-cols-12 gap-8">
+        <div className="md:col-span-5">
+          <div className="font-display text-4xl font-black mb-3">YIELDTERMINAL</div>
+          <p className="font-mono text-xs text-smoke leading-relaxed max-w-md uppercase tracking-wider">
+            Composable yield strategies on Solana. Built for traders who need evidence, not theses.
           </p>
         </div>
-        <div>
-          <div className="label mb-3">Source</div>
+        <div className="md:col-span-3">
+          <div className="label mb-3">SOURCE</div>
           <ul className="space-y-1.5 font-mono text-xs">
-            <li><a href="https://github.com/max-defi/yieldterminal" className="border-b border-rule hover:border-ink">github.com/max-defi/yieldterminal</a></li>
-            <li><span className="text-ash">twitter · pending</span></li>
+            <li><a href="https://github.com/max-defi/yieldterminal" className="text-silver hover:text-acid border-b border-steel hover:border-acid">github ↗</a></li>
+            <li><a href="#" className="text-smoke hover:text-acid">@yieldterminal</a></li>
           </ul>
         </div>
-        <div>
-          <div className="label mb-3">On chain</div>
-          <ul className="space-y-1.5 font-mono text-xs">
-            <li><span className="text-ash block">program</span><span className="break-all">313NKsMsgi…MW6VL5</span></li>
-            <li><span className="text-ash">cluster</span> <span>devnet</span></li>
+        <div className="md:col-span-4">
+          <div className="label mb-3">ON-CHAIN</div>
+          <ul className="space-y-1.5 font-mono text-xs text-silver">
+            <li><span className="text-smoke">PROG&nbsp;</span>313NKsMsgi…MW6VL5</li>
+            <li><span className="text-smoke">NET &nbsp;</span>solana devnet</li>
+            <li><span className="text-smoke">ARCH&nbsp;</span>anchor 1.0 · fastapi 0.115</li>
           </ul>
         </div>
       </div>
-      <div className="border-t border-rule">
-        <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-baseline justify-between text-[10px] font-mono text-ash">
-          <span>© MMXXVI · Yieldterminal — All vaults are auditable on-chain. Not financial advice.</span>
-          <span>Printed on Solana devnet</span>
+      <div className="border-t border-steel">
+        <div className="max-w-[1440px] mx-auto px-5 py-3 flex items-center justify-between font-mono text-[10px] text-smoke tracking-widest2 uppercase">
+          <span>© 2026 · Not financial advice · audit your own vaults</span>
+          <span className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-acid blink" />
+            <span>live · devnet · latency 34ms</span>
+          </span>
         </div>
       </div>
     </footer>
@@ -81,7 +88,7 @@ export default function App() {
   const loc = useLocation();
   const isLanding = loc.pathname === '/';
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-onyx">
       <Masthead />
       <main className="flex-1">
         <Routes>

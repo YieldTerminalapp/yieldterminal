@@ -18,4 +18,6 @@ pub enum YieldError {
     InvalidAmount,
     #[msg("Vault still has deposits or shares outstanding")]
     VaultNotEmpty,
+    #[msg("Withdrawal would leave vault below rent-exempt minimum")]
+    InsufficientBalance,
 }

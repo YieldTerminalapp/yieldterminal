@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 use crate::state::*;
 use crate::errors::YieldError;
+use crate::events::Deposited;
 
 #[derive(Accounts)]
 pub struct Deposit<'info> {
@@ -86,6 +87,15 @@ pub fn handler(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         ),
         amount,
     )?;
+
+    emit!(Deposited {
+        vault: ctx.accounts.vault.key(),
+        user: ctx.accounts.user.key(),
+        amount,
+        shares,
+        total_deposits: ctx.accounts.vault.total_deposits,
+        ts: clock.unix_timestamp,
+    });
 
     Ok(())
 }

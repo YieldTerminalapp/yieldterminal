@@ -164,6 +164,19 @@ function BuilderCanvas() {
 
   useEffect(() => { if (modalOpen) runPreview(); }, [strategy, modalOpen]);
 
+  // Close modal with Esc — but not while actively signing.
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && status.kind !== 'signing') {
+        setModalOpen(false);
+        setStatus({ kind: 'idle' });
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [modalOpen, status.kind]);
+
   const deploy = useCallback(async () => {
     if (!vp || !publicKey) return;
     setStatus({ kind: 'signing' });

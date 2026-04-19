@@ -32,228 +32,237 @@ export default function CoverIssuePage() {
     (async () => {
       try {
         const raw = await (vp.program.account as any).yieldVault.all();
-        const parsed: ListedVault[] = raw.map((r: any) => {
-          const tvl = Number(r.account.totalDeposits) / LAMPORTS_PER_SOL;
-          const age = Math.max(1, (Date.now() / 1000 - Number(r.account.createdAt)) / 86400);
-          return {
-            name: r.account.name,
-            strategy: strategyLabel(r.account.strategyType),
-            tvl,
-            perfBps: r.account.performanceBps,
-            age_d: age,
-            blocks: r.account.strategyBlocks.length,
-          };
-        });
+        const parsed: ListedVault[] = raw.map((r: any) => ({
+          name: r.account.name,
+          strategy: strategyLabel(r.account.strategyType),
+          tvl: Number(r.account.totalDeposits) / LAMPORTS_PER_SOL,
+          perfBps: r.account.performanceBps,
+          age_d: Math.max(1, (Date.now() / 1000 - Number(r.account.createdAt)) / 86400),
+          blocks: r.account.strategyBlocks.length,
+        }));
         parsed.sort((a, b) => b.tvl - a.tvl);
         setVaults(parsed);
         setTotalTvl(parsed.reduce((s, v) => s + v.tvl, 0));
       } catch (e) {
-        console.warn('landing vaults fetch:', e);
+        console.warn('landing vaults:', e);
       } finally {
         setReady(true);
       }
     })();
   }, [vp]);
 
-  const tickerItems = apy
-    ? Object.values(apy).map((p) => ({ label: p.protocol.toUpperCase(), value: `${p.apy.toFixed(2)}%`, live: p.source === 'live' }))
+  const tapeItems = apy
+    ? Object.values(apy).map((p) => ({ l: p.protocol.toUpperCase(), v: `${p.apy.toFixed(2)}%`, live: p.source === 'live' }))
     : [];
-  // duplicate for seamless loop
-  const tickerLoop = [...tickerItems, ...tickerItems];
+  const tape = [...tapeItems, ...tapeItems, ...tapeItems];
 
   return (
-    <>
-      {/* ticker */}
-      <div className="border-b border-ink bg-cream overflow-hidden">
-        <div className="flex whitespace-nowrap ticker py-2.5">
-          {tickerLoop.map((t, i) => (
-            <div key={i} className="flex items-baseline gap-3 px-8 font-mono text-xs">
-              <span className={`inline-block w-1.5 h-1.5 rounded-full ${t.live ? 'bg-leaf' : 'bg-amber'}`} />
-              <span className="text-ash tracking-widest2 uppercase">{t.label}</span>
-              <span className="num text-ink">{t.value}</span>
-              <span className="text-ash">·</span>
+    <div>
+      {/* TOP TAPE */}
+      <div className="border-b border-steel bg-coal overflow-hidden">
+        <div className="flex whitespace-nowrap tape py-2">
+          {tape.map((t, i) => (
+            <div key={i} className="flex items-baseline gap-3 px-6 font-mono text-[11px]">
+              <span className={`inline-block w-1.5 h-1.5 ${t.live ? 'bg-acid' : 'bg-hazard'}`} />
+              <span className="text-smoke tracking-widest2">{t.l}</span>
+              <span className="num text-silver font-medium">{t.v}</span>
+              <span className="text-steel">│</span>
             </div>
           ))}
-          {tickerLoop.length === 0 && <div className="px-8 text-xs text-ash">—connecting to aggregator—</div>}
+          {tape.length === 0 && <div className="px-6 font-mono text-xs text-smoke">— CONNECTING TO AGGREGATOR —</div>}
         </div>
       </div>
 
-      {/* hero */}
-      <section className="border-b border-ink">
-        <div className="max-w-[1400px] mx-auto px-6 py-16 md:py-24 grid md:grid-cols-12 gap-10">
-          <div className="md:col-span-8 reveal">
-            <div className="label mb-5">Volume I · No. 01 · Solana Devnet · MMXXVI</div>
-            <h1 className="display text-[clamp(2.8rem,7vw,5.8rem)] leading-[0.96] font-light tracking-tight">
-              Compose, backtest, <br />
-              <span className="italic">and publish</span> a yield <br />
-              strategy on Solana.
-            </h1>
-            <p className="mt-8 text-lg font-sans text-ink/80 leading-relaxed max-w-xl">
-              Yieldterminal is a research terminal for DeFi. Assemble yield primitives from Marinade, Kamino, Drift, and Jupiter into an auditable vault — with Monte-Carlo backtests, protocol-calibrated volatility profiles, and on-chain transparency.
-            </p>
-            <div className="mt-10 flex items-center gap-6">
-              <Link to="/app" className="inline-flex items-baseline gap-2 bg-ink text-paper px-6 py-3 font-mono text-xs uppercase tracking-widest2 hover:bg-rust transition-colors">
-                <span>Open terminal</span><span className="text-paper/60">→</span>
-              </Link>
-              <Link to="/backtest" className="font-mono text-xs uppercase tracking-widest2 text-ash hover:text-ink border-b border-rule hover:border-ink pb-0.5">
-                Browse research →
-              </Link>
-            </div>
-          </div>
+      {/* HERO */}
+      <section className="relative border-b border-steel overflow-hidden">
+        <div className="absolute inset-0 grid-overlay opacity-[0.18] pointer-events-none" />
+        <div className="relative max-w-[1440px] mx-auto px-5 pt-20 pb-16 md:pt-28 md:pb-24">
+          <div className="grid md:grid-cols-12 gap-10 items-end">
+            <div className="md:col-span-8 reveal">
+              <div className="flex items-baseline gap-3 mb-8">
+                <span className="label">ISSUE 001</span>
+                <span className="label !text-acid">·</span>
+                <span className="label">SOLANA DEVNET</span>
+                <span className="label !text-acid">·</span>
+                <span className="label">LIVE</span>
+              </div>
+              <h1 className="display text-[clamp(3.5rem,11vw,11rem)] leading-[0.82]">
+                YIELD<br />
+                <span className="text-acid">TERMINAL</span>
+              </h1>
+              <p className="mt-10 font-mono text-sm text-silver/70 uppercase tracking-widest2 leading-loose max-w-2xl">
+                Composable yield strategies on Solana. <span className="text-acid">Drag primitives.</span> Backtest with monte-carlo. <span className="text-acid">Publish as a vault.</span>
+              </p>
 
-          {/* pull-quote sidebar */}
-          <aside className="md:col-span-4 md:border-l md:border-ink md:pl-8">
-            <div className="label mb-3">Editor's Abstract</div>
-            <p className="display text-xl italic leading-relaxed text-ink/90">
-              "A strategy is a hypothesis. A vault is a published fund. Our terminal is the peer review — backtest it before you underwrite a single lamport."
-            </p>
-            <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
-              <Figure label="Protocols" value="04" />
-              <Figure label="Funds live" value={vaults.length.toString().padStart(2, '0')} sub={ready ? undefined : '—'} />
-              <Figure label="TVL (devnet)" value={totalTvl.toFixed(2)} suffix="SOL" />
-              <Figure label="Backtest runs" value="∞" sub="on-demand" />
+              <div className="mt-12 flex items-center gap-4 flex-wrap">
+                <Link to="/app" className="bg-acid text-onyx px-8 py-4 font-mono text-xs uppercase tracking-widest2 font-semibold hover:bg-silver transition-colors inline-flex items-center gap-3">
+                  <span>OPEN TERMINAL</span><span>→</span>
+                </Link>
+                <Link to="/backtest" className="px-6 py-4 font-mono text-xs uppercase tracking-widest2 text-silver border border-steel hover:border-acid hover:text-acid">
+                  RUN A BACKTEST
+                </Link>
+              </div>
             </div>
-          </aside>
-        </div>
-      </section>
 
-      {/* 3-step */}
-      <section className="border-b border-ink">
-        <div className="max-w-[1400px] mx-auto px-6 py-16">
-          <div className="flex items-baseline justify-between mb-10 border-b border-ink pb-3">
-            <div className="label">§ I · How the terminal operates</div>
-            <div className="font-mono text-xs text-ash">Three stages, read left to right</div>
-          </div>
-          <div className="grid md:grid-cols-3 gap-10">
-            <Step n="01" title="Compose" body="Drag yield blocks — Stake (Marinade), LP (Kamino), Covered Call (Drift), Lend, Hedge — onto a canvas. Connect them into a flow. Allocation splits evenly to 100%." />
-            <Step n="02" title="Backtest" body="Each composition runs through 40 Monte-Carlo simulations against protocol-calibrated volatility profiles. Strategy type (Covered Call / Delta Neutral / Yield Farm) overlays premium yield, vol damping, or farm amplification." />
-            <Step n="03" title="Publish" body="One signature deploys the composition as a vault PDA. Depositors mint shares; the crank reports hourly performance on-chain. Shares are transferable — every position is tradable." />
+            <aside className="md:col-span-4 border border-steel bg-coal/50 p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-steel pb-2">
+                <span className="label !text-acid">STATUS</span>
+                <span className="flex items-center gap-2 font-mono text-[10px] uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-acid blink" />
+                  <span>OPERATIONAL</span>
+                </span>
+              </div>
+              <HudRow label="PROTOCOLS"    value="04" />
+              <HudRow label="FUNDS LIVE"   value={vaults.length.toString().padStart(2, '0')} note={ready ? undefined : 'loading…'} />
+              <HudRow label="TVL · DEVNET" value={totalTvl.toFixed(2)} suffix="SOL" />
+              <HudRow label="CRANK TICK"   value="HOURLY" />
+              <HudRow label="INDEXER"      value="45s" dot />
+            </aside>
           </div>
         </div>
       </section>
 
-      {/* live funds index */}
-      <section className="border-b border-ink">
-        <div className="max-w-[1400px] mx-auto px-6 py-16">
-          <div className="flex items-baseline justify-between mb-6 border-b border-ink pb-3">
-            <div className="label">§ II · Funds index</div>
-            <Link to="/vaults" className="font-mono text-xs uppercase tracking-widest2 text-ash hover:text-ink border-b border-rule hover:border-ink pb-0.5">
-              Full prospectus →
+      {/* PROCEDURE */}
+      <section className="border-b border-steel">
+        <div className="max-w-[1440px] mx-auto px-5 py-20">
+          <div className="flex items-baseline justify-between border-b-2 border-silver pb-2 mb-12">
+            <h2 className="font-display text-3xl font-black tracking-tight">PROCEDURE</h2>
+            <span className="label">THREE STAGES · LEFT TO RIGHT</span>
+          </div>
+          <div className="grid md:grid-cols-3 gap-0 border border-steel">
+            <Stage n="01" title="COMPOSE" acid
+              body="Drag Stake, LP, Covered Call, Lend, or Hedge onto the canvas. Wire them. Allocation auto-splits to 100%." />
+            <Stage n="02" title="BACKTEST"
+              body="40 Monte-Carlo trials against protocol-calibrated volatility. Strategy type overlays option premium, vol damping, or farm amplification." />
+            <Stage n="03" title="PUBLISH"
+              body="One signature writes a PDA vault. Depositors mint tradable shares. The crank reports performance hourly, on-chain." />
+          </div>
+        </div>
+      </section>
+
+      {/* LIVE FUNDS GRID */}
+      <section className="border-b border-steel">
+        <div className="max-w-[1440px] mx-auto px-5 py-20">
+          <div className="flex items-baseline justify-between border-b-2 border-silver pb-2 mb-8">
+            <h2 className="font-display text-3xl font-black tracking-tight">FUNDS · LIVE</h2>
+            <Link to="/vaults" className="font-mono text-xs uppercase tracking-widest2 text-silver hover:text-acid">
+              ALL FUNDS →
             </Link>
           </div>
 
-          {!ready && <div className="font-mono text-xs text-ash">—fetching on-chain vaults—</div>}
+          {!ready && <div className="font-mono text-xs text-smoke uppercase tracking-widest2">— FETCHING ON-CHAIN —</div>}
 
           {ready && vaults.length === 0 && (
-            <div className="font-mono text-sm text-ash italic">
-              No funds underwritten yet. <Link to="/app" className="border-b border-rule hover:border-ink">Be the first.</Link>
+            <div className="border border-steel p-10 text-center">
+              <div className="font-display text-2xl font-black mb-2">NO FUNDS PUBLISHED.</div>
+              <Link to="/app" className="font-mono text-xs uppercase tracking-widest2 text-acid border-b border-acid">BE THE FIRST →</Link>
             </div>
           )}
 
           {vaults.length > 0 && (
-            <table className="w-full text-left">
-              <thead>
-                <tr className="font-mono text-[10px] tracking-widest2 uppercase text-ash border-b border-ink">
-                  <th className="py-2 font-normal">No.</th>
-                  <th className="py-2 font-normal">Name</th>
-                  <th className="py-2 font-normal">Strategy</th>
-                  <th className="py-2 font-normal text-right">Blocks</th>
-                  <th className="py-2 font-normal text-right">Perf (bps)</th>
-                  <th className="py-2 font-normal text-right">TVL (SOL)</th>
-                  <th className="py-2 font-normal text-right">Age (d)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vaults.map((v, i) => (
-                  <tr key={i} className="border-b border-rule hover:bg-cream transition-colors">
-                    <td className="py-3 num text-ash">{(i + 1).toString().padStart(2, '0')}</td>
-                    <td className="py-3 font-sans">{v.name}</td>
-                    <td className="py-3 font-mono text-xs text-ash">{v.strategy}</td>
-                    <td className="py-3 num text-right">{v.blocks}</td>
-                    <td className={`py-3 num text-right ${v.perfBps >= 0 ? 'text-leaf' : 'text-rust'}`}>
-                      {v.perfBps >= 0 ? '+' : ''}{v.perfBps}
-                    </td>
-                    <td className="py-3 num text-right">{v.tvl.toFixed(4)}</td>
-                    <td className="py-3 num text-right text-ash">{v.age_d.toFixed(1)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="border border-steel">
+              <div className="grid grid-cols-[60px_2fr_1fr_80px_120px_120px_80px] border-b border-steel bg-coal/80 font-mono text-[10px] uppercase tracking-widest2 text-smoke">
+                <div className="px-4 py-3">№</div>
+                <div className="px-4 py-3">NAME</div>
+                <div className="px-4 py-3">THESIS</div>
+                <div className="px-4 py-3 text-right">BLK</div>
+                <div className="px-4 py-3 text-right">PERF (BPS)</div>
+                <div className="px-4 py-3 text-right">TVL (SOL)</div>
+                <div className="px-4 py-3 text-right">AGE</div>
+              </div>
+              {vaults.map((v, i) => (
+                <div key={i} className="grid grid-cols-[60px_2fr_1fr_80px_120px_120px_80px] border-b border-steel last:border-0 hover:bg-graphite transition-colors">
+                  <div className="px-4 py-3 num text-smoke text-sm">{(i + 1).toString().padStart(2, '0')}</div>
+                  <div className="px-4 py-3 font-display font-black text-sm tracking-tight">{v.name}</div>
+                  <div className="px-4 py-3 font-mono text-[10px] uppercase text-smoke tracking-widest2">{v.strategy}</div>
+                  <div className="px-4 py-3 num text-right text-sm">{v.blocks}</div>
+                  <div className={`px-4 py-3 num text-right text-sm ${v.perfBps >= 0 ? 'text-acid' : 'text-blood'}`}>
+                    {v.perfBps >= 0 ? '+' : ''}{v.perfBps}
+                  </div>
+                  <div className="px-4 py-3 num text-right text-sm">{v.tvl.toFixed(4)}</div>
+                  <div className="px-4 py-3 num text-right text-sm text-smoke">{v.age_d.toFixed(1)}d</div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </section>
 
-      {/* concept pillars */}
-      <section className="border-b border-ink">
-        <div className="max-w-[1400px] mx-auto px-6 py-16">
-          <div className="flex items-baseline justify-between mb-10 border-b border-ink pb-3">
-            <div className="label">§ III · Why a terminal, not a dashboard</div>
+      {/* THE DIFFERENCE */}
+      <section className="border-b border-steel">
+        <div className="max-w-[1440px] mx-auto px-5 py-20">
+          <div className="flex items-baseline justify-between border-b-2 border-silver pb-2 mb-12">
+            <h2 className="font-display text-3xl font-black tracking-tight">THE DIFFERENCE</h2>
+            <span className="label">WHY NOT JUST DEPOSIT AND PRAY</span>
           </div>
-          <div className="grid md:grid-cols-2 gap-10">
-            <Pillar n="A" title="Composability as research hypothesis"
-              body="Every vault is a readable composition: 50% Stake/Marinade + 30% LP/Kamino + 20% Sell-Call/Drift. You can reverse-engineer any deployed fund's thesis from its blocks array." />
-            <Pillar n="B" title="Real APY, not marketing APY"
-              body="The aggregator pulls Marinade's live 30-day APY (api.marinade.finance) and Kamino's market data. Estimates are flagged so you never confuse a brochure with the order book." />
-            <Pillar n="C" title="Monte Carlo, calibrated"
-              body="Each protocol has a hand-calibrated volatility, loss-chance, and max-loss profile. Strategy type overlays option-premium yield (covered call) or vol damping (delta-neutral). The Sharpe you see is the Sharpe you'd get." />
-            <Pillar n="D" title="Tokenized positions"
-              body="Shares are PDAs — transferable between depositors. Build an over-the-counter market, a wrapped-fund ETF, or just gift your nephew a yield position for his birthday." />
+          <div className="grid md:grid-cols-2 gap-0 border border-steel">
+            <Pillar mark="A" title="REAL APY, NOT MARKETING APY"
+              body="Marinade 30d API is live. Kamino, Drift, Jupiter use last-observed estimates — flagged so you never confuse a brochure with the order book." />
+            <Pillar mark="B" title="MONTE CARLO, CALIBRATED"
+              body="Each protocol has hand-tuned volatility, loss-chance, and max-loss. Strategy type overlays premium yield (covered call) or vol damping (delta-neutral)." acid />
+            <Pillar mark="C" title="COMPOSABLE BY DESIGN"
+              body="Every vault is a readable allocation: 50% Stake/Marinade + 30% LP/Kamino + 20% Sell-Call/Drift. Reverse-engineer any deployed thesis from its blocks." />
+            <Pillar mark="D" title="TOKENIZED POSITIONS"
+              body="Shares are PDAs — transferable between depositors. Build a secondary market, wrap them, or hand them off. The rails are on-chain." />
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section>
-        <div className="max-w-[1400px] mx-auto px-6 py-24 text-center">
-          <div className="label mb-6">§ IV · Begin</div>
-          <h2 className="display text-5xl md:text-6xl font-light leading-tight mb-8">
-            Your first strategy takes <br /><span className="italic">ninety seconds.</span>
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 grid-overlay opacity-[0.12] pointer-events-none" />
+        <div className="relative max-w-[1440px] mx-auto px-5 py-28 text-center">
+          <div className="label mb-6">BEGIN</div>
+          <h2 className="display text-[clamp(3rem,9vw,8rem)] leading-[0.85]">
+            NINETY<br />
+            <span className="text-acid">SECONDS.</span>
           </h2>
-          <div className="flex items-center justify-center gap-6">
-            <Link to="/app" className="inline-flex items-baseline gap-2 bg-ink text-paper px-8 py-4 font-mono text-xs uppercase tracking-widest2 hover:bg-rust transition-colors">
-              <span>Enter terminal</span><span className="text-paper/60">→</span>
-            </Link>
-            <Link to="/backtest" className="font-mono text-xs uppercase tracking-widest2 border-b border-ink pb-0.5 hover:text-rust">
-              Run a backtest first
+          <p className="mt-8 font-mono text-sm text-silver/70 uppercase tracking-widest2 max-w-xl mx-auto">
+            That's the time it takes to draft, backtest, and publish your first strategy.
+          </p>
+          <div className="mt-12 flex items-center justify-center gap-4">
+            <Link to="/app" className="bg-acid text-onyx px-10 py-4 font-mono text-xs uppercase tracking-widest2 font-semibold hover:bg-silver transition-colors inline-flex items-center gap-3">
+              <span>ENTER TERMINAL</span><span>→</span>
             </Link>
           </div>
         </div>
       </section>
-    </>
-  );
-}
-
-function Figure({ label, value, suffix, sub }: { label: string; value: string; suffix?: string; sub?: string }) {
-  return (
-    <div className="border-t border-ink pt-2">
-      <div className="label text-[9px]">{label}</div>
-      <div className="flex items-baseline gap-1.5">
-        <span className="display text-3xl leading-none font-light">{value}</span>
-        {suffix && <span className="font-mono text-[10px] text-ash">{suffix}</span>}
-      </div>
-      {sub && <div className="text-[9px] text-ash font-mono mt-0.5">{sub}</div>}
     </div>
   );
 }
 
-function Step({ n, title, body }: { n: string; title: string; body: string }) {
+function HudRow({ label, value, suffix, note, dot }: { label: string; value: string; suffix?: string; note?: string; dot?: boolean }) {
   return (
-    <div className="relative">
-      <div className="display text-7xl font-light text-rust mb-3 leading-none">{n}</div>
-      <h3 className="display text-2xl mb-3">{title}</h3>
-      <p className="font-sans text-[15px] leading-relaxed text-ink/75 max-w-sm">{body}</p>
+    <div className="flex items-baseline justify-between border-b border-steel pb-2 last:border-0">
+      <span className="label">{label}</span>
+      <span className="flex items-baseline gap-1.5">
+        {dot && <span className="w-1 h-1 rounded-full bg-acid blink" />}
+        <span className="num text-lg font-medium text-silver">{value}</span>
+        {suffix && <span className="font-mono text-[10px] text-smoke tracking-widest2">{suffix}</span>}
+        {note && <span className="font-mono text-[10px] text-smoke">{note}</span>}
+      </span>
     </div>
   );
 }
 
-function Pillar({ n, title, body }: { n: string; title: string; body: string }) {
+function Stage({ n, title, body, acid }: { n: string; title: string; body: string; acid?: boolean }) {
   return (
-    <div className="flex gap-5 items-start">
-      <div className="display italic text-5xl text-ash leading-none shrink-0 w-10">{n}.</div>
-      <div>
-        <h3 className="display text-xl mb-2">{title}</h3>
-        <p className="font-sans text-[15px] leading-relaxed text-ink/75">{body}</p>
+    <div className={`p-8 md:border-r md:last:border-r-0 border-steel ${acid ? 'bg-acid text-onyx' : 'hover:bg-graphite transition-colors'}`}>
+      <div className={`font-mono text-[10px] tracking-widest2 mb-6 ${acid ? 'text-onyx/60' : 'text-smoke'}`}>STAGE · {n}</div>
+      <div className={`display text-5xl mb-4 ${acid ? 'text-onyx' : ''}`}>{title}</div>
+      <p className={`font-mono text-xs leading-relaxed uppercase tracking-wider ${acid ? 'text-onyx/75' : 'text-silver/70'}`}>{body}</p>
+    </div>
+  );
+}
+
+function Pillar({ mark, title, body, acid }: { mark: string; title: string; body: string; acid?: boolean }) {
+  return (
+    <div className={`p-8 md:even:border-l md:[&:nth-child(n+3)]:border-t border-steel ${acid ? 'bg-acid text-onyx' : ''}`}>
+      <div className="flex items-baseline gap-4 mb-3">
+        <span className={`display text-5xl ${acid ? 'text-onyx' : 'text-acid'}`}>{mark}</span>
+        <h3 className={`display text-xl leading-tight ${acid ? 'text-onyx' : ''}`}>{title}</h3>
       </div>
+      <p className={`font-mono text-xs leading-relaxed uppercase tracking-wider mt-3 ${acid ? 'text-onyx/75' : 'text-silver/70'}`}>{body}</p>
     </div>
   );
 }

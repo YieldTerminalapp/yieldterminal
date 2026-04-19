@@ -1,6 +1,6 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import LandingPage from './pages/LandingPage';
+import CoverIssuePage from './pages/CoverIssuePage';
 import BuilderPage from './pages/BuilderPage';
 import VaultsPage from './pages/VaultsPage';
 import BacktestPage from './pages/BacktestPage';
@@ -85,7 +85,7 @@ export default function App() {
       <Masthead />
       <main className="flex-1">
         <Routes>
-          <Route path="/"         element={<LandingPage />} />
+          <Route path="/"         element={<CoverIssuePage />} />
           <Route path="/app"      element={<BuilderPage />} />
           <Route path="/vaults"   element={<VaultsPage />} />
           <Route path="/backtest" element={<BacktestPage />} />

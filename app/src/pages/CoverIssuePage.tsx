@@ -18,7 +18,7 @@ function strategyLabel(v: any): string {
   return k.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()).trim();
 }
 
-export default function LandingPage() {
+export default function CoverIssuePage() {
   const vp = useVaultProgram();
   const [apy, setApy] = useState<Record<string, ApyRow> | null>(null);
   const [vaults, setVaults] = useState<ListedVault[]>([]);

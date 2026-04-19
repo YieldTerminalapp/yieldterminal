@@ -27,10 +27,9 @@ class BacktestResult:
     protocols_used: list[str]
 
 
-def simulate_one(blocks: list[dict], days: int, seed: int | None = None) -> list[float]:
+def simulate_one(blocks: list[dict], days: int, apys: dict[str, float], seed: int | None = None) -> list[float]:
     if seed is not None:
         random.seed(seed)
-    apys = {p: s.apy for p, s in all_protocols().items()}
 
     returns: list[float] = []
     for _ in range(days):
@@ -50,7 +49,8 @@ def simulate_one(blocks: list[dict], days: int, seed: int | None = None) -> list
 
 
 def run(blocks: list[dict], days: int = 30, runs: int = 50) -> BacktestResult:
-    all_returns = [simulate_one(blocks, days, seed=i) for i in range(runs)]
+    apys = {p: s.apy for p, s in all_protocols().items()}  # fetch once, reuse across all runs
+    all_returns = [simulate_one(blocks, days, apys, seed=i) for i in range(runs)]
     avg_daily = [sum(r[d] for r in all_returns) / runs for d in range(days)]
 
     equity = [1.0]

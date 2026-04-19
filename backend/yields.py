@@ -37,7 +37,7 @@ def marinade_apy() -> ApySource:
         apy = float(r.text) * 100
         return _fresh("marinade", ApySource("marinade", round(apy, 2), "live", int(time.time())))
     except Exception:
-        return ApySource("marinade", 6.85, "estimate", int(time.time()))
+        return _fresh("marinade", ApySource("marinade", 6.85, "estimate", int(time.time())))
 
 
 def kamino_apy() -> ApySource:
@@ -52,7 +52,8 @@ def kamino_apy() -> ApySource:
                 return _fresh("kamino", ApySource("kamino", round(apy, 2), "live", int(time.time())))
     except Exception:
         pass
-    return ApySource("kamino", 9.2, "estimate", int(time.time()))
+    # cache fallback so we don't re-hit the endpoint each call
+    return _fresh("kamino", ApySource("kamino", 9.2, "estimate", int(time.time())))
 
 
 def drift_apy() -> ApySource:

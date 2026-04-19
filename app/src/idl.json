@@ -737,6 +737,11 @@
       "code": 6007,
       "name": "VaultNotEmpty",
       "msg": "Vault still has deposits or shares outstanding"
+    },
+    {
+      "code": 6008,
+      "name": "InsufficientBalance",
+      "msg": "Withdrawal would leave vault below rent-exempt minimum"
     }
   ],
   "types": [

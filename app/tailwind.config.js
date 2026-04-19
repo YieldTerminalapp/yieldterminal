@@ -4,11 +4,23 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+        display: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+        sans: ['Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['"Geist Mono"', 'ui-monospace', 'Menlo', 'monospace'],
       },
       colors: {
-        navy: { 900: '#0f172a', 800: '#1e293b', 700: '#334155', 600: '#475569' },
-        accent: '#3b82f6',
+        paper:  '#F5F1EA',
+        cream:  '#EDE7DB',
+        ink:    '#0E0C0A',
+        rule:   '#D9D3C6',
+        ash:    '#8A7F6E',
+        leaf:   '#1E5A3A',
+        rust:   '#C73F1F',
+        cobalt: '#1A3B8C',
+        amber:  '#B9841C',
+      },
+      letterSpacing: {
+        widest2: '0.22em',
       },
     },
   },

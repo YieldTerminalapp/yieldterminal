@@ -57,13 +57,13 @@ export interface BlockPayload {
 
 export const api = {
   apy: () => req<Record<string, ApyRow>>('/apy'),
-  backtest: (blocks: BlockPayload[], days = 30, runs = 50) =>
+  backtest: (blocks: BlockPayload[], days = 30, runs = 50, strategy_type?: string) =>
     req<BacktestResult>('/backtest', {
       method: 'POST',
-      body: JSON.stringify({ blocks, days, runs }),
+      body: JSON.stringify({ blocks, days, runs, strategy_type }),
     }),
-  risk: (blocks: BlockPayload[]) =>
-    req<RiskResult>('/risk', { method: 'POST', body: JSON.stringify({ blocks }) }),
+  risk: (blocks: BlockPayload[], strategy_type?: string) =>
+    req<RiskResult>('/risk', { method: 'POST', body: JSON.stringify({ blocks, strategy_type }) }),
   events: (vault?: string, limit = 50) => {
     const q = new URLSearchParams();
     if (vault) q.set('vault', vault);

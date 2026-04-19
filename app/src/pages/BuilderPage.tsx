@@ -118,8 +118,8 @@ export default function BuilderPage() {
     setPreviewLoading(true);
     try {
       const [bt, rk] = await Promise.all([
-        api.backtest(blocksPayload, 30, 40),
-        api.risk(blocksPayload),
+        api.backtest(blocksPayload, 30, 40, strategy),
+        api.risk(blocksPayload, strategy),
       ]);
       setBacktest(bt);
       setRisk(rk);
@@ -128,7 +128,7 @@ export default function BuilderPage() {
     } finally {
       setPreviewLoading(false);
     }
-  }, [blocksPayload, nodes.length]);
+  }, [blocksPayload, nodes.length, strategy]);
 
   const openModal = useCallback(() => {
     setStatus({ kind: 'idle' });
@@ -137,6 +137,11 @@ export default function BuilderPage() {
     setModalOpen(true);
     runPreview();
   }, [runPreview]);
+
+  // re-run preview when user flips the strategy-type pill while modal is open
+  useEffect(() => {
+    if (modalOpen) runPreview();
+  }, [strategy, modalOpen]);
 
   const deploy = useCallback(async () => {
     if (!vp || !publicKey) return;

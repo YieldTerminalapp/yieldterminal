@@ -3,7 +3,7 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 interface Props { children: ReactNode }
 interface State { err?: Error }
 
-export default class ErrorBoundary extends Component<Props, State> {
+export default class VaultGuard extends Component<Props, State> {
   state: State = {};
 
   static getDerivedStateFromError(err: Error): State {
@@ -12,7 +12,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(err: Error, info: ErrorInfo) {
     // eslint-disable-next-line no-console
-    console.error('[ErrorBoundary]', err, info.componentStack);
+    console.error('[VaultGuard]', err, info.componentStack);
   }
 
   render() {

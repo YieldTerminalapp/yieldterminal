@@ -6,18 +6,18 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { SolanaProviders } from './WalletProvider';
-import ErrorBoundary from './components/ErrorBoundary';
+import VaultGuard from './components/VaultGuard';
 import App from './App';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary>
+    <VaultGuard>
       <BrowserRouter>
         <SolanaProviders>
           <App />
         </SolanaProviders>
       </BrowserRouter>
-    </ErrorBoundary>
+    </VaultGuard>
   </StrictMode>
 );

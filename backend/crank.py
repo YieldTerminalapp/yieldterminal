@@ -12,12 +12,20 @@ from solders.message import MessageV0
 from solders.pubkey import Pubkey
 from solders.transaction import VersionedTransaction
 
-from . import db
-from .config import (
-    PROGRAM_ID, RPC_URL, VAULT_SEED, account_discriminator,
-    anchor_discriminator, config_pda, load_authority_keypair_bytes,
-)
-from .yields import composition_apy
+try:
+    from . import db
+    from .config import (
+        PROGRAM_ID, RPC_URL, VAULT_SEED, account_discriminator,
+        anchor_discriminator, config_pda, load_authority_keypair_bytes,
+    )
+    from .yields import composition_apy
+except ImportError:
+    import db  # type: ignore[no-redef]
+    from config import (  # type: ignore[no-redef]
+        PROGRAM_ID, RPC_URL, VAULT_SEED, account_discriminator,
+        anchor_discriminator, config_pda, load_authority_keypair_bytes,
+    )
+    from yields import composition_apy  # type: ignore[no-redef]
 
 log = logging.getLogger("crank")
 

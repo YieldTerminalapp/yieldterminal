@@ -400,6 +400,7 @@ function BuilderCanvas() {
                       <button
                         key={s.key}
                         onClick={() => setStrategy(s.key)}
+                        title={s.tooltip}
                         className={`py-3 font-mono text-[11px] uppercase tracking-widest2 transition-colors ${
                           active ? 'bg-acid text-onyx' : 'bg-onyx text-smoke hover:text-silver'
                         }`}

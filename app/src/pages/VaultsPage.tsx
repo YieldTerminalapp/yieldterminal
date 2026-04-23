@@ -194,6 +194,9 @@ export default function VaultsPage() {
       {!loading && vaults && vaults.length === 0 && (
         <div className="border border-steel p-10 text-center">
           <div className="font-display text-3xl font-black mb-2">NO FUNDS PUBLISHED.</div>
+          <p className="font-mono text-[11px] text-smoke uppercase tracking-widest2 mb-4 max-w-md mx-auto">
+            The fund index reads from the on-chain registry. As soon as the first vault deploys, it appears here with its prospectus card and live equity curve.
+          </p>
           <a href="/app" className="font-mono text-xs uppercase tracking-widest2 text-acid border-b border-acid">BE THE FIRST →</a>
         </div>
       )}

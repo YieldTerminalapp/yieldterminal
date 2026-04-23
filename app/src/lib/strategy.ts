@@ -20,10 +20,25 @@ export const BLOCKS: BlockType[] = [
 
 export type StrategyKind = 'coveredCall' | 'deltaNeutral' | 'yieldFarm';
 
-export const STRATEGY_KINDS: { key: StrategyKind; label: string }[] = [
-  { key: 'coveredCall',  label: 'Covered Call' },
-  { key: 'deltaNeutral', label: 'Delta Neutral' },
-  { key: 'yieldFarm',    label: 'Yield Farm' },
+export const STRATEGY_KINDS: { key: StrategyKind; label: string; tooltip: string }[] = [
+  {
+    key: 'coveredCall',
+    label: 'Covered Call',
+    tooltip:
+      'Hold the underlying, sell weekly out-of-the-money calls. Adds a flat option-premium yield (~3-7% APY overlay) at the cost of capping upside above strike.',
+  },
+  {
+    key: 'deltaNeutral',
+    label: 'Delta Neutral',
+    tooltip:
+      'Long collateral hedged with a perp short. Vol damper of ~0.55× — flatter equity curve, smaller drawdowns, lower APY ceiling. Funding costs net into yield.',
+  },
+  {
+    key: 'yieldFarm',
+    label: 'Yield Farm',
+    tooltip:
+      'Stake / LP across protocols, no hedging. Vol amplifier ~1.15× — fattest mean APY, also the most exposed to drawdowns and IL.',
+  },
 ];
 
 // Distribute 100 across n blocks; residual (0..n-1) goes into last block to hit exactly 100.

@@ -2,6 +2,8 @@
 
 Drag-and-drop builder for yield strategies on Solana. Build, backtest, and deploy yield vaults — no code required.
 
+**Research terminal · live:** [yieldterminal.vercel.app](https://yieldterminal.vercel.app) — devnet vaults, free read-only browse, deploy needs a connected devnet wallet.
+
 ## Supported Strategies
 
 | Strategy           | Risk        | Expected APY | Status   | Composition                                | Notes                                     |

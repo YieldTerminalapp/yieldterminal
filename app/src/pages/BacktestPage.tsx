@@ -218,7 +218,33 @@ export default function BacktestPage() {
           <section className="mb-5 border border-steel">
             <div className="border-b border-steel px-4 py-2.5 flex items-baseline justify-between">
               <span className="label !text-acid">§ I · HEADLINE STATISTICS</span>
-              <span className="font-mono text-[10px] text-smoke uppercase tracking-widest2">n={runs} · T={days}D</span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!result?.equity_curve?.length) return;
+                    const rows = [
+                      ['day', 'equity'],
+                      ...result.equity_curve.map((v: number, i: number) => [String(i), v.toFixed(6)]),
+                    ];
+                    const csv = rows.map((r) => r.join(',')).join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `backtest_${days}d_${runs}runs.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="font-mono text-[10px] uppercase tracking-widest2 text-smoke hover:text-acid border border-steel px-2 py-1"
+                  title="Download averaged equity curve as CSV"
+                >
+                  EXPORT · CSV
+                </button>
+                <span className="font-mono text-[10px] text-smoke uppercase tracking-widest2">n={runs} · T={days}D</span>
+              </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-steel">
               <BigStat label="TOTAL RETURN" value={`${result.total_return_pct >= 0 ? '+' : ''}${result.total_return_pct}%`} tone={result.total_return_pct >= 0 ? 'up' : 'down'} />

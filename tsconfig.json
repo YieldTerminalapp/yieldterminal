@@ -1,17 +1,10 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "commonjs",
-    "lib": ["es2020", "dom"],
+    "types": ["mocha", "chai"],
     "typeRoots": ["./node_modules/@types"],
-    "types": ["chai", "mocha"],
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "forceConsistentCasingInFileNames": true
-  },
-  "exclude": ["node_modules", "target", ".anchor", "app", "backend", "crank", "dist"]
+    "lib": ["es2015"],
+    "module": "commonjs",
+    "target": "es6",
+    "esModuleInterop": true
+  }
 }

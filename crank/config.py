@@ -22,13 +22,8 @@ STRATEGY_BASIS_TRADE = 3
 STRATEGY_CUSTOM = 4
 
 
-def keypair_secret_from_json(path: str) -> bytes:
-    # Solana CLI stores a 64-byte signing secret as a JSON int array.
-    # Open as binary so json.loads handles the byte buffer directly and we
-    # avoid any text-mode newline translation on Windows dev boxes.
-    target = Path(path).expanduser()
-    with target.open('rb') as fh:
-        secret = bytes(json.loads(fh.read())[:64])
-    if len(secret) != 64:
-        raise RuntimeError(f'{target}: expected 64-byte secret, got {len(secret)}')
-    return secret
+def load_keypair_bytes(path: str) -> bytes:
+    resolved = Path(path).expanduser()
+    with open(resolved, 'r') as fh:
+        data = json.load(fh)
+    return bytes(data[:64])

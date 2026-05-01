@@ -12,8 +12,3 @@ __pycache__/
 .venv/
 .DS_Store
 .vercel
-*.tsbuildinfo
-
-backend/.venv/
-backend/yt.db
-backend/__pycache__/

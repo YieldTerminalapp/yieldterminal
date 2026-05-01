@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::state::*;
 use crate::errors::YieldError;
-use crate::events::Withdrawn;
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
@@ -56,33 +55,19 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
         .checked_sub(shares)
         .ok_or(YieldError::MathOverflow)?;
 
-    // transfer lamports from vault to user, guarding rent-exemption so the vault PDA can't be
-    // reclaimed by anyone else after balance falls below the rent minimum.
+    // transfer lamports from vault to user
     let vault_info = ctx.accounts.vault.to_account_info();
     let user_info = ctx.accounts.user.to_account_info();
-    let rent_min = Rent::get()?.minimum_balance(vault_info.data_len());
-    let post_balance = vault_info
+    **vault_info.try_borrow_mut_lamports()? = vault_info
         .lamports()
         .checked_sub(payout)
         .ok_or(YieldError::MathOverflow)?;
-    require!(post_balance >= rent_min, YieldError::InsufficientBalance);
-
-    **vault_info.try_borrow_mut_lamports()? = post_balance;
     **user_info.try_borrow_mut_lamports()? = user_info
         .lamports()
         .checked_add(payout)
         .ok_or(YieldError::MathOverflow)?;
 
     msg!("withdrew {} for {} shares", payout, shares);
-
-    emit!(Withdrawn {
-        vault: ctx.accounts.vault.key(),
-        user: ctx.accounts.user.key(),
-        payout,
-        shares,
-        total_deposits: ctx.accounts.vault.total_deposits,
-        ts: Clock::get()?.unix_timestamp,
-    });
 
     Ok(())
 }

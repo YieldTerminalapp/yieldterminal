@@ -306,10 +306,38 @@ export default function BacktestPage() {
             Strategy-type overlay adds a flat daily option-premium yield (covered call), a 0.55× vol damper (delta-neutral),
             or a 1.15× amplification (yield farm). PAST BACKTEST PERFORMANCE IS NOT INDICATIVE OF FUTURE RETURNS.
           </section>
+
+          <CitationsFooter result={result} days={days} runs={runs} />
         </>
       )}
     </div>
   );
+}
+
+function CitationsFooter({ result, days, runs }: { result: { total_return_pct: number; sharpe_ratio: number } | null; days: number; runs: number }) {
+  if (!result) return null;
+  const stamp = new Date().toISOString().slice(0, 10);
+  const runId = runIdFor(days, runs, result.total_return_pct, result.sharpe_ratio);
+  return (
+    <section className="border-t border-steel pt-4 mt-2 font-mono text-[10px] text-smoke uppercase tracking-widest2 flex flex-wrap items-center gap-x-6 gap-y-1">
+      <span className="text-silver">CITE AS —</span>
+      <span>YT/2026/§III/<span className="text-cobalt">{runId}</span></span>
+      <span aria-hidden>·</span>
+      <span>RUN {stamp}</span>
+      <span aria-hidden>·</span>
+      <span>HORIZON {days}D · {runs} RUNS</span>
+    </section>
+  );
+}
+
+function runIdFor(days: number, runs: number, ret: number, sharpe: number): string {
+  // tiny stable hash so two identical runs share a citation id
+  const seed = `${days}|${runs}|${ret.toFixed(2)}|${sharpe.toFixed(3)}`;
+  let h = 5381;
+  for (let i = 0; i < seed.length; i++) {
+    h = ((h << 5) + h + seed.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h).toString(36).padStart(6, '0').slice(0, 6).toUpperCase();
 }
 
 function riskColor(label: string): string {

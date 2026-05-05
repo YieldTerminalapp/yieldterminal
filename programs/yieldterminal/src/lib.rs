@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 
 pub mod errors;
-pub mod events;
 pub mod instructions;
 pub mod state;
 // no constants module — all values inline
@@ -29,17 +28,5 @@ pub mod yieldterminal {
 
     pub fn withdraw(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
         super::instructions::withdraw::handler(ctx, shares)
-    }
-
-    pub fn execute_strategy(ctx: Context<ExecuteStrategy>, delta_bps: i16) -> Result<()> {
-        super::instructions::execute_strategy::handler(ctx, delta_bps)
-    }
-
-    pub fn close_vault(ctx: Context<CloseVault>) -> Result<()> {
-        super::instructions::close_vault::handler(ctx)
-    }
-
-    pub fn transfer_shares(ctx: Context<TransferShares>, shares: u64) -> Result<()> {
-        super::instructions::transfer_shares::handler(ctx, shares)
     }
 }

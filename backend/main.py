@@ -41,10 +41,12 @@ class BacktestRequest(BaseModel):
     blocks: list[Block]
     days: int = 30
     runs: int = 50
+    strategy_type: str | None = None
 
 
 class RiskRequest(BaseModel):
     blocks: list[Block]
+    strategy_type: str | None = None
 
 
 def _index_job():
@@ -119,14 +121,14 @@ def run_backtest(req: BacktestRequest):
     if req.runs < 5 or req.runs > 500:
         raise HTTPException(400, "runs must be 5..500")
     blocks = [b.model_dump() for b in req.blocks]
-    result = backtest.run(blocks, days=req.days, runs=req.runs)
+    result = backtest.run(blocks, days=req.days, runs=req.runs, strategy_type=req.strategy_type)
     return backtest.as_dict(result)
 
 
 @app.post("/risk")
 def run_risk(req: RiskRequest):
     blocks = [b.model_dump() for b in req.blocks]
-    return risk.score(blocks)
+    return risk.score(blocks, strategy_type=req.strategy_type)
 
 
 @app.get("/events")

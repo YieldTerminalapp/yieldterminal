@@ -1,6 +1,13 @@
 """Risk scoring for a strategy block composition."""
 from .backtest import PROTOCOL_RISK
 
+# Strategy-type risk adder — covered call = capped upside + pin risk, delta neutral = hedged, yield farm = IL
+STRATEGY_RISK_ADD = {
+    "coveredCall":  {"score": 5,  "note": "covered-call cap — limited upside on sharp rallies"},
+    "deltaNeutral": {"score": -10, "note": "hedged — reduced market exposure"},
+    "yieldFarm":    {"score": 8,  "note": "yield-farm — impermanent loss exposure"},
+}
+
 # Per-action leverage / complexity weight (higher = more dangerous)
 ACTION_WEIGHT = {
     "stake":      0.1,
@@ -20,7 +27,7 @@ SOL_CORRELATION = {
 }
 
 
-def score(blocks: list[dict]) -> dict:
+def score(blocks: list[dict], strategy_type: str | None = None) -> dict:
     if not blocks:
         return {"score": 0, "label": "N/A", "var_1d_pct": 0, "sol_beta": 0, "notes": ["no blocks"]}
 
@@ -53,6 +60,11 @@ def score(blocks: list[dict]) -> dict:
         notes.append("high SOL beta — correlated with market")
     if weighted_action > 0.55:
         notes.append("complex options exposure")
+
+    if strategy_type and strategy_type in STRATEGY_RISK_ADD:
+        mod = STRATEGY_RISK_ADD[strategy_type]
+        raw = max(0, min(100, raw + mod["score"]))
+        notes.append(mod["note"])
 
     if raw < 25:
         label = "Conservative"

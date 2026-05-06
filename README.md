@@ -22,7 +22,7 @@ Drag-and-drop builder for yield strategies on Solana. Build, backtest, and deplo
 
 Drag strategy blocks onto canvas → connect them → backtest with historical data → deploy as a vault.
 
-## Stack
+## Engine architecture
 
 - **Contracts**: Anchor — vault management, Drift/Kamino CPI
 - **Frontend**: React + React Flow (canvas) + pro charts
@@ -30,7 +30,7 @@ Drag strategy blocks onto canvas → connect them → backtest with historical d
 - **Font**: DM Sans
 - **Theme**: FinTech dark blue
 
-## Development
+## Run it
 
 ```bash
 anchor build && anchor deploy

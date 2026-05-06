@@ -20,8 +20,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from . import backtest, crank, db, indexer, risk, yields
-from .config import CRANK_INTERVAL_SEC, INDEX_INTERVAL_SEC
+# Import siblings either as a package (`uvicorn backend.main:app` from repo
+# root) or as plain modules (`uvicorn main:app` from inside backend/, the way
+# Railway runs us when rootDirectory=backend).
+try:
+    from . import backtest, crank, db, indexer, risk, yields
+    from .config import CRANK_INTERVAL_SEC, INDEX_INTERVAL_SEC
+except ImportError:
+    import backtest, crank, db, indexer, risk, yields  # type: ignore[no-redef]
+    from config import CRANK_INTERVAL_SEC, INDEX_INTERVAL_SEC  # type: ignore[no-redef]
 
 logging.basicConfig(
     level=logging.INFO,

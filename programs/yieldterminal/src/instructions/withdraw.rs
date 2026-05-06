@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use crate::state::*;
 use crate::errors::YieldError;
+use crate::events::Withdrawn;
 
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
@@ -68,6 +69,15 @@ pub fn handler(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
         .ok_or(YieldError::MathOverflow)?;
 
     msg!("withdrew {} for {} shares", payout, shares);
+
+    emit!(Withdrawn {
+        vault: ctx.accounts.vault.key(),
+        user: ctx.accounts.user.key(),
+        payout,
+        shares,
+        total_deposits: ctx.accounts.vault.total_deposits,
+        ts: Clock::get()?.unix_timestamp,
+    });
 
     Ok(())
 }

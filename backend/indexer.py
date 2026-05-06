@@ -7,8 +7,12 @@ import time
 import httpx
 from solders.pubkey import Pubkey
 
-from . import db
-from .config import PROGRAM_ID, RPC_URL, account_discriminator
+try:
+    from . import db
+    from .config import PROGRAM_ID, RPC_URL, account_discriminator
+except ImportError:
+    import db  # type: ignore[no-redef]
+    from config import PROGRAM_ID, RPC_URL, account_discriminator  # type: ignore[no-redef]
 
 log = logging.getLogger("indexer")
 
@@ -85,9 +89,31 @@ def _decode_event(payload: bytes) -> tuple[str, dict] | None:
 
 
 def _extract_events(logs: list[str]) -> list[tuple[str, dict]]:
+    """Decode only events emitted while OUR program is the active invocation.
+
+    Solana tx logs are a stack: "Program <ID> invoke" pushes, "Program <ID> success/failed" pops.
+    A nested CPI's events show up between its own invoke/success pair — those must not be
+    decoded with our discriminators (false positives if 8 bytes happen to collide).
+    """
     out = []
+    our_pid = str(PROGRAM_ID)
+    invoke_stack: list[str] = []
     for line in logs or []:
+        # track invocation stack
+        if "invoke" in line and line.startswith("Program "):
+            parts = line.split()
+            # "Program <ID> invoke [N]"
+            if len(parts) >= 3 and parts[2] == "invoke":
+                invoke_stack.append(parts[1])
+            continue
+        if "success" in line or "failed" in line:
+            if line.startswith("Program ") and invoke_stack:
+                invoke_stack.pop()
+            continue
         if not line.startswith(EVENT_LOG_PREFIX):
+            continue
+        # only accept event lines when our program is the top of the stack
+        if not invoke_stack or invoke_stack[-1] != our_pid:
             continue
         b64 = line[len(EVENT_LOG_PREFIX):].strip()
         try:

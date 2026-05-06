@@ -38,6 +38,23 @@ def config_pda() -> Pubkey:
 
 
 def load_authority_keypair_bytes() -> bytes:
+    """Resolve the authority keypair as raw bytes.
+
+    Railway containers don't carry the deploy keypair on disk, so the
+    `AUTHORITY_KEYPAIR_JSON` env (inline JSON array, brackets optional —
+    Railway dashboards sometimes strip them on paste) takes precedence.
+    Local dev keeps the file-based path.
+    """
+    inline = os.getenv("AUTHORITY_KEYPAIR_JSON", "").strip()
+    if inline:
+        try:
+            payload = json.loads(inline)
+        except json.JSONDecodeError:
+            inner = inline.lstrip("[(").rstrip(")]").strip()
+            payload = [int(x) for x in inner.split(",") if x.strip()]
+        if not isinstance(payload, list) or len(payload) < 64:
+            raise ValueError("AUTHORITY_KEYPAIR_JSON must be a >=64-byte int array")
+        return bytes(payload[:64])
     with open(AUTHORITY_KP_PATH) as fh:
         data = json.load(fh)
     return bytes(data[:64])

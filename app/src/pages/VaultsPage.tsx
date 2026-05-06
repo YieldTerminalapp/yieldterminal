@@ -115,14 +115,18 @@ export default function VaultsPage() {
 
   useEffect(() => { fetchVaults(); }, [fetchVaults]);
 
+  const fetchEvents = useCallback((vaultKey: string, signal?: AbortSignal) => {
+    api.events(vaultKey, 30, signal)
+      .then((d) => setEvents(d.events))
+      .catch((e) => { if (e?.name !== 'AbortError') setEvents([]); });
+  }, []);
+
   useEffect(() => {
     if (!expanded) { setEvents([]); return; }
-    let cancelled = false;
-    api.events(expanded, 30)
-      .then((d) => { if (!cancelled) setEvents(d.events); })
-      .catch(() => { if (!cancelled) setEvents([]); });
-    return () => { cancelled = true; };
-  }, [expanded, tx]);
+    const ac = new AbortController();
+    fetchEvents(expanded, ac.signal);
+    return () => ac.abort();
+  }, [expanded, fetchEvents]);
 
   const submitDeposit = useCallback(async (vault: OnChainVault) => {
     if (!vp || !publicKey) return;
@@ -138,10 +142,11 @@ export default function VaultsPage() {
       setTx({ kind: 'ok', sig, op: 'deposit' });
       setDepositAmount('');
       await fetchVaults();
+      if (expanded) fetchEvents(expanded);
     } catch (e: any) {
       setTx({ kind: 'err', msg: e?.message || 'deposit failed' });
     }
-  }, [vp, publicKey, depositAmount, fetchVaults]);
+  }, [vp, publicKey, depositAmount, fetchVaults, expanded, fetchEvents]);
 
   const submitWithdraw = useCallback(async (vault: OnChainVault) => {
     if (!vp || !publicKey) return;
@@ -156,10 +161,11 @@ export default function VaultsPage() {
       setTx({ kind: 'ok', sig, op: 'withdraw' });
       setWithdrawShares('');
       await fetchVaults();
+      if (expanded) fetchEvents(expanded);
     } catch (e: any) {
       setTx({ kind: 'err', msg: e?.message || 'withdraw failed' });
     }
-  }, [vp, publicKey, withdrawShares, fetchVaults]);
+  }, [vp, publicKey, withdrawShares, fetchVaults, expanded, fetchEvents]);
 
   return (
     <div className="max-w-[1440px] mx-auto px-5 py-5">
@@ -188,6 +194,9 @@ export default function VaultsPage() {
       {!loading && vaults && vaults.length === 0 && (
         <div className="border border-steel p-10 text-center">
           <div className="font-display text-3xl font-black mb-2">NO FUNDS PUBLISHED.</div>
+          <p className="font-mono text-[11px] text-smoke uppercase tracking-widest2 mb-4 max-w-md mx-auto">
+            The fund index reads from the on-chain registry. As soon as the first vault deploys, it appears here with its prospectus card and live equity curve.
+          </p>
           <a href="/app" className="font-mono text-xs uppercase tracking-widest2 text-acid border-b border-acid">BE THE FIRST →</a>
         </div>
       )}

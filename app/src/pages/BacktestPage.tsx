@@ -56,33 +56,40 @@ export default function BacktestPage() {
   const [err, setErr] = useState<string | null>(null);
   const [apy, setApy] = useState<Record<string, ApyRow> | null>(null);
 
-  useEffect(() => { api.apy().then(setApy).catch(() => {}); }, []);
+  useEffect(() => {
+    const ac = new AbortController();
+    api.apy(ac.signal).then(setApy).catch(() => {});
+    return () => ac.abort();
+  }, []);
 
   const preset = PRESETS.find((p) => p.key === key)!;
 
-  const run = useCallback(async () => {
+  // Debounce slider-driven backtest — don't fire on every pixel of slider drag.
+  useEffect(() => {
+    const ac = new AbortController();
     setLoading(true); setErr(null);
-    try {
-      const pcts = splitAllocation(preset.blocks.length);
-      const payload = preset.blocks.map((b, i) => ({
-        action: b.action.replace(/([A-Z])/g, '_$1').toLowerCase(),
-        protocol: b.protocol,
-        allocation_pct: pcts[i],
-      }));
-      const [r, rk] = await Promise.all([
-        api.backtest(payload, days, runs, preset.strategy),
-        api.risk(payload, preset.strategy),
-      ]);
-      setResult(r);
-      setRisk(rk);
-    } catch (e: any) {
-      setErr(e?.message || 'backtest failed');
-    } finally {
-      setLoading(false);
-    }
-  }, [key, days, runs, preset]);
+    const t = setTimeout(async () => {
+      try {
+        const pcts = splitAllocation(preset.blocks.length);
+        const payload = preset.blocks.map((b, i) => ({
+          action: b.action.replace(/([A-Z])/g, '_$1').toLowerCase(),
+          protocol: b.protocol,
+          allocation_pct: pcts[i],
+        }));
+        const [r, rk] = await Promise.all([
+          api.backtest(payload, days, runs, preset.strategy, ac.signal),
+          api.risk(payload, preset.strategy, ac.signal),
+        ]);
+        setResult(r); setRisk(rk);
+      } catch (e: any) {
+        if (e?.name !== 'AbortError') setErr(e?.message || 'backtest failed');
+      } finally {
+        setLoading(false);
+      }
+    }, 280);
 
-  useEffect(() => { run(); }, [run]);
+    return () => { clearTimeout(t); ac.abort(); };
+  }, [key, days, runs, preset]);
 
   const chartPaths = useMemo(() => {
     if (!result) return null;
@@ -211,7 +218,33 @@ export default function BacktestPage() {
           <section className="mb-5 border border-steel">
             <div className="border-b border-steel px-4 py-2.5 flex items-baseline justify-between">
               <span className="label !text-acid">§ I · HEADLINE STATISTICS</span>
-              <span className="font-mono text-[10px] text-smoke uppercase tracking-widest2">n={runs} · T={days}D</span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!result?.equity_curve?.length) return;
+                    const rows = [
+                      ['day', 'equity'],
+                      ...result.equity_curve.map((v: number, i: number) => [String(i), v.toFixed(6)]),
+                    ];
+                    const csv = rows.map((r) => r.join(',')).join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `backtest_${days}d_${runs}runs.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="font-mono text-[10px] uppercase tracking-widest2 text-smoke hover:text-acid border border-steel px-2 py-1"
+                  title="Download averaged equity curve as CSV"
+                >
+                  EXPORT · CSV
+                </button>
+                <span className="font-mono text-[10px] text-smoke uppercase tracking-widest2">n={runs} · T={days}D</span>
+              </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-steel">
               <BigStat label="TOTAL RETURN" value={`${result.total_return_pct >= 0 ? '+' : ''}${result.total_return_pct}%`} tone={result.total_return_pct >= 0 ? 'up' : 'down'} />
@@ -299,10 +332,38 @@ export default function BacktestPage() {
             Strategy-type overlay adds a flat daily option-premium yield (covered call), a 0.55× vol damper (delta-neutral),
             or a 1.15× amplification (yield farm). PAST BACKTEST PERFORMANCE IS NOT INDICATIVE OF FUTURE RETURNS.
           </section>
+
+          <CitationsFooter result={result} days={days} runs={runs} />
         </>
       )}
     </div>
   );
+}
+
+function CitationsFooter({ result, days, runs }: { result: { total_return_pct: number; sharpe_ratio: number } | null; days: number; runs: number }) {
+  if (!result) return null;
+  const stamp = new Date().toISOString().slice(0, 10);
+  const runId = runIdFor(days, runs, result.total_return_pct, result.sharpe_ratio);
+  return (
+    <section className="border-t border-steel pt-4 mt-2 font-mono text-[10px] text-smoke uppercase tracking-widest2 flex flex-wrap items-center gap-x-6 gap-y-1">
+      <span className="text-silver">CITE AS —</span>
+      <span>YT/2026/§III/<span className="text-cobalt">{runId}</span></span>
+      <span aria-hidden>·</span>
+      <span>RUN {stamp}</span>
+      <span aria-hidden>·</span>
+      <span>HORIZON {days}D · {runs} RUNS</span>
+    </section>
+  );
+}
+
+function runIdFor(days: number, runs: number, ret: number, sharpe: number): string {
+  // tiny stable hash so two identical runs share a citation id
+  const seed = `${days}|${runs}|${ret.toFixed(2)}|${sharpe.toFixed(3)}`;
+  let h = 5381;
+  for (let i = 0; i < seed.length; i++) {
+    h = ((h << 5) + h + seed.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h).toString(36).padStart(6, '0').slice(0, 6).toUpperCase();
 }
 
 function riskColor(label: string): string {

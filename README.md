@@ -44,4 +44,4 @@ Past performance does not guarantee future results. Yield strategies involve ris
 
 ## License
 
-MIT
+Released under MIT — full terms in [LICENSE](LICENSE). The grant covers the strategy builder, backtester, and Anchor vault programs; it does **not** extend any warranty over deployed capital or simulated APYs. Pair this with the Performance Disclaimer above: the code ships open, the P&L stays yours.

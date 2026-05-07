@@ -3,10 +3,7 @@ import sqlite3
 from contextlib import contextmanager
 from typing import Iterator
 
-try:
-    from .config import DB_PATH
-except ImportError:
-    from config import DB_PATH  # type: ignore[no-redef]
+from .config import DB_PATH
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (

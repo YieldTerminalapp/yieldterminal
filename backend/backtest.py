@@ -3,10 +3,7 @@ import math
 import random
 from dataclasses import dataclass, asdict
 
-try:
-    from .yields import all_protocols
-except ImportError:
-    from yields import all_protocols  # type: ignore[no-redef]
+from .yields import all_protocols
 
 
 # per-protocol volatility + loss-chance pair (empirically calibrated)

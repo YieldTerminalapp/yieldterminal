@@ -1,8 +1,5 @@
 """Risk scoring for a strategy block composition."""
-try:
-    from .backtest import PROTOCOL_RISK
-except ImportError:
-    from backtest import PROTOCOL_RISK  # type: ignore[no-redef]
+from .backtest import PROTOCOL_RISK
 
 # Strategy-type risk adder — covered call = capped upside + pin risk, delta neutral = hedged, yield farm = IL
 STRATEGY_RISK_ADD = {

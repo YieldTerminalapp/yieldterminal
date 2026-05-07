@@ -7,12 +7,8 @@ import time
 import httpx
 from solders.pubkey import Pubkey
 
-try:
-    from . import db
-    from .config import PROGRAM_ID, RPC_URL, account_discriminator
-except ImportError:
-    import db  # type: ignore[no-redef]
-    from config import PROGRAM_ID, RPC_URL, account_discriminator  # type: ignore[no-redef]
+from . import db
+from .config import PROGRAM_ID, RPC_URL, account_discriminator
 
 log = logging.getLogger("indexer")
 

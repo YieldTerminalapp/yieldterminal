@@ -2,8 +2,6 @@
 
 Drag-and-drop builder for yield strategies on Solana. Build, backtest, and deploy yield vaults — no code required.
 
-**Research terminal · live:** [yieldterminal.vercel.app](https://yieldterminal.vercel.app) — devnet vaults, free read-only browse, deploy needs a connected devnet wallet.
-
 ## Supported Strategies
 
 | Strategy           | Risk        | Expected APY | Status   | Composition                                | Notes                                     |
@@ -22,7 +20,7 @@ Drag-and-drop builder for yield strategies on Solana. Build, backtest, and deplo
 
 Drag strategy blocks onto canvas → connect them → backtest with historical data → deploy as a vault.
 
-## Engine architecture
+## Stack
 
 - **Contracts**: Anchor — vault management, Drift/Kamino CPI
 - **Frontend**: React + React Flow (canvas) + pro charts
@@ -30,7 +28,7 @@ Drag strategy blocks onto canvas → connect them → backtest with historical d
 - **Font**: DM Sans
 - **Theme**: FinTech dark blue
 
-## Run it
+## Development
 
 ```bash
 anchor build && anchor deploy
@@ -44,4 +42,4 @@ Past performance does not guarantee future results. Yield strategies involve ris
 
 ## License
 
-Released under MIT — full terms in [LICENSE](LICENSE). The grant covers the strategy builder, backtester, and Anchor vault programs; it does **not** extend any warranty over deployed capital or simulated APYs. Pair this with the Performance Disclaimer above: the code ships open, the P&L stays yours.
+MIT

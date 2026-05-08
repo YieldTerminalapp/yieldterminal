@@ -71,6 +71,8 @@ export default function VaultsPage() {
   const [tx, setTx] = useState<TxState>({ kind: 'idle' });
   const [riskByVault, setRiskByVault] = useState<Record<string, { score: number; label: string }>>({});
   const [events, setEvents] = useState<VaultEvent[]>([]);
+  const [position, setPosition] = useState<{ shares: number; depositedSol: number } | null>(null);
+  const [pollingDeposit, setPollingDeposit] = useState(false);
 
   const fetchVaults = useCallback(async () => {
     if (!vp) return;
@@ -121,12 +123,28 @@ export default function VaultsPage() {
       .catch((e) => { if (e?.name !== 'AbortError') setEvents([]); });
   }, []);
 
+  const fetchPosition = useCallback(async (vaultKey: string) => {
+    if (!vp || !publicKey) { setPosition(null); return; }
+    try {
+      const pda = depositPda(vp.program.programId, new PublicKey(vaultKey), publicKey);
+      const acct: any = await (vp.program.account as any).vaultDeposit.fetch(pda);
+      setPosition({
+        shares: Number(acct.shares),
+        depositedSol: Number(acct.depositedAmount) / LAMPORTS_PER_SOL,
+      });
+    } catch {
+      // PDA not initialized → user has no position yet
+      setPosition(null);
+    }
+  }, [vp, publicKey]);
+
   useEffect(() => {
-    if (!expanded) { setEvents([]); return; }
+    if (!expanded) { setEvents([]); setPosition(null); return; }
     const ac = new AbortController();
     fetchEvents(expanded, ac.signal);
+    fetchPosition(expanded);
     return () => ac.abort();
-  }, [expanded, fetchEvents]);
+  }, [expanded, fetchEvents, fetchPosition, publicKey]);
 
   const submitDeposit = useCallback(async (vault: OnChainVault) => {
     if (!vp || !publicKey) return;
@@ -142,11 +160,23 @@ export default function VaultsPage() {
       setTx({ kind: 'ok', sig, op: 'deposit' });
       setDepositAmount('');
       await fetchVaults();
-      if (expanded) fetchEvents(expanded);
+      const vaultKey = vault.pubkey.toBase58();
+      fetchPosition(vaultKey);
+      // Indexer refreshes every 45s — poll events for ~60s so the new tx surfaces in changelog.
+      setPollingDeposit(true);
+      const start = Date.now();
+      const tick = window.setInterval(() => {
+        if (Date.now() - start > 60_000) {
+          window.clearInterval(tick);
+          setPollingDeposit(false);
+          return;
+        }
+        fetchEvents(vaultKey);
+      }, 8_000);
     } catch (e: any) {
       setTx({ kind: 'err', msg: e?.message || 'deposit failed' });
     }
-  }, [vp, publicKey, depositAmount, fetchVaults, expanded, fetchEvents]);
+  }, [vp, publicKey, depositAmount, fetchVaults, fetchEvents, fetchPosition]);
 
   const submitWithdraw = useCallback(async (vault: OnChainVault) => {
     if (!vp || !publicKey) return;
@@ -161,11 +191,13 @@ export default function VaultsPage() {
       setTx({ kind: 'ok', sig, op: 'withdraw' });
       setWithdrawShares('');
       await fetchVaults();
+      const vaultKey = vault.pubkey.toBase58();
+      fetchPosition(vaultKey);
       if (expanded) fetchEvents(expanded);
     } catch (e: any) {
       setTx({ kind: 'err', msg: e?.message || 'withdraw failed' });
     }
-  }, [vp, publicKey, withdrawShares, fetchVaults, expanded, fetchEvents]);
+  }, [vp, publicKey, withdrawShares, fetchVaults, expanded, fetchEvents, fetchPosition]);
 
   return (
     <div className="max-w-[1440px] mx-auto px-5 py-5">
@@ -262,6 +294,20 @@ export default function VaultsPage() {
                     <div className="grid md:grid-cols-12 gap-0">
                       {/* actions */}
                       <div className="md:col-span-5 p-5 md:border-r border-steel">
+                        {publicKey && (
+                          <div className="border border-steel p-3 mb-4">
+                            <div className="label mb-1">MY POSITION</div>
+                            {position ? (
+                              <div className="font-mono text-xs">
+                                <div><span className="num text-acid">{position.shares.toLocaleString()}</span> shares</div>
+                                <div className="text-smoke">cost basis · <span className="num">{position.depositedSol.toFixed(4)}</span> SOL</div>
+                              </div>
+                            ) : (
+                              <div className="font-mono text-[11px] text-smoke uppercase tracking-widest2">— NO SUBSCRIPTION YET —</div>
+                            )}
+                          </div>
+                        )}
+
                         <div className="label mb-4 !text-acid">SUBSCRIBE</div>
 
                         <div className="mb-5">
@@ -286,12 +332,23 @@ export default function VaultsPage() {
                         </div>
 
                         <div className="mb-5">
-                          <div className="label text-[9px] mb-1">REDEEM · SHARES</div>
+                          <div className="label text-[9px] mb-1 flex items-baseline justify-between">
+                            <span>REDEEM · SHARES</span>
+                            {position && position.shares > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setWithdrawShares(String(position.shares))}
+                                className="font-mono text-[9px] uppercase tracking-widest2 text-acid hover:underline"
+                              >
+                                MAX
+                              </button>
+                            )}
+                          </div>
                           <div className="flex items-baseline gap-3">
                             <input
                               value={withdrawShares}
                               onChange={(e) => setWithdrawShares(e.target.value)}
-                              placeholder="1000000"
+                              placeholder={position ? String(position.shares) : '0'}
                               type="number"
                               className="!text-2xl font-display font-black"
                             />
@@ -324,7 +381,8 @@ export default function VaultsPage() {
                         <div className="flex items-baseline justify-between mb-4">
                           <div className="label">CHANGELOG · LAST EVENTS</div>
                           <div className="font-mono text-[10px] text-smoke uppercase tracking-widest2 flex items-center gap-1.5">
-                            <span className="w-1 h-1 rounded-full bg-acid blink" /> FROM INDEXER
+                            <span className="w-1 h-1 rounded-full bg-acid blink" />
+                            {pollingDeposit ? 'INDEXING NEW TX…' : 'FROM INDEXER'}
                           </div>
                         </div>
 
